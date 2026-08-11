@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ori — Painel Admin</title>
+<style>
+  :root {
+    --bg: #f4f5f7;
+    --surface: #ffffff;
+    --text: #1c1e21;
+    --text-dim: #6b7280;
+    --accent: #325387;
+    --accent-light: #4d8bba;
+    --accent-dark: #071b3c;
+    --border: #e5e7eb;
+  }
+  * { box-sizing: border-box; }
+  html { color-scheme: light; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  header {
+    background: linear-gradient(to right, var(--accent) 0%, var(--accent-light) 50%, var(--accent) 100%);
+    color: white; padding: 18px 20px 0;
+  }
+  .header-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+  header h1 { font-size: 18px; margin: 0 0 4px; }
+  header p { font-size: 13px; margin: 0 0 14px; opacity: 0.85; }
+  .home-nav-btn {
+    flex-shrink: 0; display: flex; align-items: center; gap: 6px;
+    background: rgba(255,255,255,0.15); color: white; border: none;
+    border-radius: 8px; padding: 8px 12px; font-size: 12.5px; font-weight: 600; cursor: pointer;
+  }
+  .home-nav-btn:hover { background: rgba(255,255,255,0.28); }
+
+  .tabs { display: flex; gap: 4px; }
+  .tab-btn {
+    background: rgba(255,255,255,0.15); color: white; border: none;
+    padding: 10px 18px; border-radius: 8px 8px 0 0;
+    font-size: 13.5px; font-weight: 600; cursor: pointer;
+    opacity: 0.75;
+  }
+  .tab-btn.active { background: var(--bg); color: var(--accent); opacity: 1; }
+
+  .toolbar {
+    position: sticky; top: 0; z-index: 5;
+    background: var(--surface); border-bottom: 1px solid var(--border);
+    padding: 12px 20px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
+  }
+  .toolbar input {
+    flex: 1; min-width: 200px;
+    padding: 9px 12px; border-radius: 8px; border: 1px solid var(--border);
+    font-size: 14px;
+  }
+  .count-badge {
+    font-size: 13px; font-weight: 600; color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 10%, var(--surface));
+    padding: 6px 12px; border-radius: 8px; white-space: nowrap;
+  }
+  .clear-btn, .new-btn {
+    font-size: 13px; font-weight: 600;
+    border-radius: 8px; padding: 9px 14px; white-space: nowrap;
+    cursor: pointer;
+  }
+  .clear-btn { color: var(--text-dim); background: var(--bg); border: 1px solid var(--border); }
+  .clear-btn:hover { color: #b91c1c; border-color: #b91c1c; }
+  .new-btn { color: white; background: var(--accent); border: none; }
+  .new-btn:hover { background: var(--accent-dark); }
+
+  .list { max-width: 720px; margin: 0 auto; padding: 16px 20px 60px; }
+  .row {
+    display: flex; align-items: center; gap: 14px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 10px 14px; margin-bottom: 8px;
+  }
+  .row img {
+    width: 48px; height: 48px; object-fit: contain; background: #fff;
+    border: 1px solid var(--border); border-radius: 8px; flex-shrink: 0;
+  }
+  .row .info { flex: 1; min-width: 0; }
+  .row .desc { font-size: 13.5px; line-height: 1.3; }
+  .row .meta { font-size: 11.5px; color: var(--text-dim); margin-top: 2px; }
+  .row input[type="checkbox"] {
+    width: 22px; height: 22px; accent-color: var(--accent); flex-shrink: 0; cursor: pointer;
+  }
+  .row.checked { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 4%, var(--surface)); }
+
+  .cat-block { margin-bottom: 8px; }
+  .cat-block .row { margin-bottom: 0; }
+  .cat-products {
+    background: var(--bg); border: 1px solid var(--border); border-top: none;
+    border-radius: 0 0 12px 12px; padding: 10px 14px 12px;
+    max-height: 260px; overflow-y: auto;
+  }
+  .cat-products-title {
+    font-size: 11.5px; font-weight: 700; color: var(--text-dim); text-transform: uppercase;
+    letter-spacing: 0.4px; margin-bottom: 8px;
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  }
+  .mini-count {
+    font-weight: 700; color: var(--accent); text-transform: none; letter-spacing: 0;
+    background: color-mix(in srgb, var(--accent) 10%, var(--surface));
+    padding: 2px 8px; border-radius: 10px; flex-shrink: 0;
+  }
+  .mini-row {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 9px;
+    padding: 7px 10px; margin-bottom: 6px; cursor: pointer;
+  }
+  .mini-row:last-child { margin-bottom: 0; }
+  .mini-row.checked { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 4%, var(--surface)); }
+  .mini-row input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent); flex-shrink: 0; cursor: pointer; }
+  .mini-row img { width: 34px; height: 34px; object-fit: contain; background: #fff; border: 1px solid var(--border); border-radius: 6px; flex-shrink: 0; }
+  .mini-info { flex: 1; min-width: 0; }
+  .mini-desc { font-size: 12px; line-height: 1.3; }
+  .mini-meta { font-size: 10.5px; color: var(--text-dim); margin-top: 1px; }
+  .chevron { flex-shrink: 0; color: var(--text-dim); font-size: 14px; padding: 4px; }
+
+  .edit-btn {
+    flex-shrink: 0; background: var(--bg); border: 1px solid var(--border); color: var(--accent);
+    border-radius: 8px; padding: 7px 12px; font-size: 12.5px; font-weight: 600; cursor: pointer;
+  }
+  .edit-btn:hover { background: color-mix(in srgb, var(--accent) 10%, var(--surface)); }
+
+  .save-bar {
+    position: fixed; left: 0; right: 0; bottom: 0;
+    background: var(--accent); color: white;
+    padding: 14px 20px; display: none;
+    align-items: center; justify-content: space-between;
+    box-shadow: 0 -4px 12px rgba(0,0,0,0.15);
+  }
+  .save-bar.show { display: flex; }
+  .save-bar button {
+    background: white; color: var(--accent);
+    border: none; border-radius: 8px; padding: 9px 18px;
+    font-weight: 700; font-size: 14px; cursor: pointer;
+  }
+  .hint { font-size: 12px; color: var(--text-dim); padding: 0 20px 8px; max-width: 720px; margin: 0 auto; }
+  .hint.warn {
+    background: #fff7e6; color: #92600a; border: 1px solid #f5d896;
+    border-radius: 8px; padding: 10px 14px; margin: 12px 20px 0; max-width: 680px;
+  }
+
+  /* Modal de produto */
+  .overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+    z-index: 50; align-items: flex-end; justify-content: center;
+  }
+  .overlay.open { display: flex; }
+  .modal {
+    background: var(--surface); width: 100%; max-width: 560px;
+    max-height: 92vh; overflow-y: auto;
+    border-radius: 18px 18px 0 0; padding: 20px 20px 24px;
+  }
+  @media (min-width: 620px) {
+    .overlay { align-items: center; }
+    .modal { border-radius: 16px; margin: 20px; }
+  }
+  .modal h2 { font-size: 17px; margin: 0 0 4px; color: var(--accent-dark); }
+  .modal .modal-sub { font-size: 12.5px; color: var(--text-dim); margin: 0 0 16px; }
+  .field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 12px; }
+  .field { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
+  .field.full { grid-column: 1 / -1; }
+  .field label { font-size: 12px; font-weight: 600; color: var(--text-dim); }
+  .field input, .field textarea, .field select {
+    padding: 9px 11px; border-radius: 8px; border: 1px solid var(--border);
+    font-size: 14px; font-family: inherit; background: var(--bg); color: var(--text);
+  }
+  .field textarea { resize: vertical; min-height: 56px; }
+  .linha-checks { display: flex; gap: 14px; flex-wrap: wrap; }
+  .linha-checks label { display: flex; align-items: center; gap: 6px; font-size: 13.5px; font-weight: 500; color: var(--text); }
+
+  .aplicacao-row {
+    display: grid; grid-template-columns: 1.6fr 1fr 0.8fr 0.8fr auto;
+    gap: 6px; margin-bottom: 6px; align-items: center;
+  }
+  .aplicacao-row input {
+    padding: 8px 9px; border-radius: 7px; border: 1px solid var(--border);
+    font-size: 13px; font-family: inherit; background: var(--bg); color: var(--text);
+    min-width: 0;
+  }
+  .aplicacao-row input::placeholder { color: var(--text-dim); }
+  .remove-row-btn {
+    flex-shrink: 0; width: 26px; height: 26px; border-radius: 50%;
+    background: var(--bg); border: 1px solid var(--border); color: var(--text-dim);
+    cursor: pointer; font-size: 15px; line-height: 1; display: flex; align-items: center; justify-content: center;
+  }
+  .remove-row-btn:hover { color: #b91c1c; border-color: #b91c1c; }
+  .add-row-btn {
+    margin-top: 2px; background: none; border: 1px dashed var(--border); color: var(--accent);
+    border-radius: 8px; padding: 8px 12px; font-size: 13px; font-weight: 600; cursor: pointer; width: 100%;
+  }
+  .add-row-btn:hover { background: color-mix(in srgb, var(--accent) 6%, var(--surface)); }
+  @media (max-width: 500px) {
+    .aplicacao-row { grid-template-columns: 1fr 1fr; }
+  }
+  .photo-upload {
+    display: flex; align-items: center; gap: 12px;
+  }
+  .photo-preview {
+    width: 64px; height: 64px; border-radius: 8px; border: 1px solid var(--border);
+    background: #fff; display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0;
+  }
+  .photo-preview img { max-width: 90%; max-height: 90%; object-fit: contain; }
+  .photo-preview.empty { color: var(--text-dim); font-size: 10.5px; text-align: center; }
+  .modal-actions { display: flex; gap: 10px; margin-top: 16px; }
+  .modal-actions button {
+    flex: 1; padding: 12px; border-radius: 9px; font-weight: 700; font-size: 14px; cursor: pointer;
+  }
+  .btn-cancel { background: var(--bg); border: 1px solid var(--border); color: var(--text); }
+  .btn-save { background: var(--accent); border: none; color: white; }
+  .btn-save:hover { background: var(--accent-dark); }
+
+  .toast {
+    position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%) translateY(120%);
+    background: var(--accent-dark); color: white; padding: 12px 20px; border-radius: 10px;
+    font-size: 13.5px; font-weight: 600; box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+    transition: transform 0.25s ease; z-index: 60; max-width: 90vw; text-align: center;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+<script>
+  // Simulação de login (demo) — só o papel "admin" pode entrar aqui.
+  let __session = null;
+  try { __session = JSON.parse(sessionStorage.getItem('ori_session') || 'null'); } catch (e) {}
+  if (!__session) {
+    window.location.replace('login.html');
+  } else if (__session.role !== 'admin') {
+    window.location.replace('home.html');
+  }
+</script>
+
+<header>
+  <div class="header-top">
+    <div>
+      <h1>Painel Admin</h1>
+      <p>Destaques da página inicial e cadastro de produtos.</p>
+    </div>
+    <button type="button" class="home-nav-btn" id="homeNavBtn">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="m3 9 9-7 9 7"/><path d="M5 10v10a1 1 0 0 0 1 1h3v-6h6v6h3a1 1 0 0 0 1-1V10"/></svg>
+      Voltar à Home
+    </button>
+  </div>
+  <div class="tabs">
+    <button type="button" class="tab-btn active" id="tabBtnDestaques">Destaques</button>
+    <button type="button" class="tab-btn" id="tabBtnProdutos">Produtos</button>
+    <button type="button" class="tab-btn" id="tabBtnBanners">Banners</button>
+    <button type="button" class="tab-btn" id="tabBtnInstagram">Instagram</button>
+  </div>
+</header>
+
+<!-- ===== Aba: Destaques ===== -->
+<div id="tabDestaques">
+  <div class="toolbar">
+    <input type="text" id="search" placeholder="Buscar categoria...">
+    <div class="count-badge" id="countBadge">0 de 5 selecionadas</div>
+    <button type="button" class="clear-btn" id="clearBtn">Limpar seleção</button>
+  </div>
+  <div class="hint">Escolha até 5 categorias — elas aparecem como abas na vitrine "Produtos em destaque" da página inicial (até 6 peças de cada categoria). Nesta demonstração, a seleção fica salva no seu navegador. Na versão de produção, isso ficaria salvo no banco de dados, disponível pra qualquer pessoa que acessar o painel.</div>
+
+  <div class="list" id="list"></div>
+</div>
+
+<!-- ===== Aba: Produtos ===== -->
+<div id="tabProdutos" style="display:none">
+  <div class="toolbar">
+    <input type="text" id="productSearch" placeholder="Buscar por código, marca ou descrição...">
+    <button type="button" class="clear-btn" id="newCategoryBtn">+ Nova categoria</button>
+    <button type="button" class="new-btn" id="newProductBtn">+ Novo produto</button>
+  </div>
+  <div class="hint warn">
+    <b>Pré-visualização.</b> O cadastro e a edição de produtos aqui ainda não são salvos de verdade — servem pra testar a experiência do formulário. A gravação definitiva (e a foto indo pra um storage de verdade) chega junto com o backend. As alterações desta sessão somem se você recarregar a página.
+  </div>
+  <div class="list" id="productList"></div>
+</div>
+
+<!-- ===== Aba: Banners ===== -->
+<div id="tabBanners" style="display:none">
+  <div class="toolbar">
+    <span style="flex:1; font-size:13.5px; color:var(--text-dim)">Banners rotativos da página inicial, logo abaixo de "Monte seu Catálogo".</span>
+    <button type="button" class="new-btn" id="addBannerBtn">+ Adicionar banner</button>
+    <input type="file" id="bannerFileInput" accept="image/*" style="display:none">
+  </div>
+  <div class="hint warn">
+    <b>Tamanho recomendado:</b> imagens na proporção larga <b>1140 × 340px</b> (ou qualquer múltiplo dessa proporção, ex: 1600 × 477px) — JPG ou PNG, de preferência abaixo de 500KB. Imagens fora dessa proporção aparecem cortadas. A ordem da lista abaixo é a ordem de exibição no carrossel.
+  </div>
+  <div class="list" id="bannerList"></div>
+</div>
+
+<!-- ===== Aba: Instagram ===== -->
+<div id="tabInstagram" style="display:none">
+  <div class="toolbar">
+    <span style="flex:1; font-size:13.5px; color:var(--text-dim)">Fotos da seção "Acompanhe — Siga a Ori no Instagram" na página inicial.</span>
+    <button type="button" class="new-btn" id="addInstaBtn">+ Adicionar foto</button>
+    <input type="file" id="instaFileInput" accept="image/*" style="display:none">
+  </div>
+  <div class="hint warn">
+    <b>Tamanho recomendado:</b> fotos quadradas/retrato na proporção <b>4 × 5</b> (ex: 1080 × 1350px, o formato padrão de post do Instagram) — JPG ou PNG. A ordem da lista abaixo é a ordem de exibição na grade.
+  </div>
+  <div class="list" id="instaList"></div>
+</div>
+
+<div class="save-bar" id="saveBar">
+  <span id="saveMsg">Alterações salvas automaticamente</span>
+  <button id="viewHome">Ver na página inicial →</button>
+</div>
+
+<!-- ===== Modal de produto (novo / editar) ===== -->
+<div class="overlay" id="productOverlay">
+  <div class="modal">
+    <h2 id="modalTitle">Novo produto</h2>
+    <p class="modal-sub">Campos marcados são os mesmos usados no catálogo hoje.</p>
+    <form id="productForm">
+      <div class="photo-upload">
+        <div class="photo-preview empty" id="photoPreview">sem foto</div>
+        <div class="field" style="margin-bottom:0; flex:1">
+          <label for="fPhoto">Foto do produto</label>
+          <input type="file" id="fPhoto" accept="image/*">
+        </div>
+      </div>
+      <div class="field-grid" style="margin-top:12px">
+        <div class="field">
+          <label for="fCodigo">Código Ori *</label>
+          <input type="text" id="fCodigo" required>
+        </div>
+        <div class="field">
+          <label for="fOriginal">Código original</label>
+          <input type="text" id="fOriginal">
+        </div>
+        <div class="field">
+          <label for="fMarca">Marca *</label>
+          <select id="fMarca" required></select>
+        </div>
+        <div class="field">
+          <label for="fCategoria">Categoria *</label>
+          <select id="fCategoria" required></select>
+        </div>
+        <div class="field full">
+          <label for="fDescricao">Descrição *</label>
+          <textarea id="fDescricao" required placeholder="Ex: Fecho Inferior do Capô - Gol GI 88 a 94"></textarea>
+        </div>
+        <div class="field full">
+          <label>Veículos compatíveis <span style="font-weight:400;color:var(--text-dim)">(um por veículo — pode adicionar quantos precisar)</span></label>
+          <div id="aplicacoesList"></div>
+          <button type="button" class="add-row-btn" id="addAplicacaoBtn">+ Adicionar veículo</button>
+        </div>
+        <div class="field">
+          <label for="fPeso">Peso líquido</label>
+          <input type="text" id="fPeso" placeholder="Ex: 0,154 kg">
+        </div>
+        <div class="field">
+          <label for="fBarras">Código de barras</label>
+          <input type="text" id="fBarras">
+        </div>
+        <div class="field full">
+          <label for="fPreco">Preço (uso futuro — ainda não aparece para o usuário)</label>
+          <input type="number" id="fPreco" step="0.01" min="0" placeholder="0,00">
+        </div>
+        <div class="field full">
+          <label>Linha(s)</label>
+          <div class="linha-checks">
+            <label><input type="checkbox" value="Leve" class="fLinha"> Leve</label>
+            <label><input type="checkbox" value="Van" class="fLinha"> Van</label>
+            <label><input type="checkbox" value="Pesada" class="fLinha"> Pesada</label>
+          </div>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" id="cancelProductBtn">Cancelar</button>
+        <button type="submit" class="btn-save">Salvar produto</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ===== Modal genérico: novo valor (categoria / marca) ===== -->
+<div class="overlay" id="inputOverlay">
+  <div class="modal" style="max-width:380px">
+    <h2 id="inputModalTitle">Novo valor</h2>
+    <form id="inputForm">
+      <div class="field full">
+        <label id="inputModalLabel" for="inputModalField">Nome</label>
+        <input type="text" id="inputModalField" required>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" id="inputCancelBtn">Cancelar</button>
+        <button type="submit" class="btn-save">Salvar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let PRODUCTS = [];
+const MAX_DESTAQUE_CATEGORIAS = 5;
+const MAX_DESTAQUE_PRODUTOS = 3;
+let destaques = new Set(); // categorias em destaque (ordem = ordem das abas na home)
+let destaqueProdutos = {}; // { categoria: [ids dos produtos escolhidos pra essa categoria] }
+
+function loadDestaques() {
+  try { return new Set(JSON.parse(localStorage.getItem('ori_destaque_categorias') || '[]')); } catch (e) { return new Set(); }
+}
+function saveDestaques() {
+  localStorage.setItem('ori_destaque_categorias', JSON.stringify([...destaques]));
+  document.getElementById('saveBar').classList.add('show');
+}
+
+function loadDestaqueProdutos() {
+  try { return JSON.parse(localStorage.getItem('ori_destaque_produtos') || '{}'); } catch (e) { return {}; }
+}
+function saveDestaqueProdutos() {
+  localStorage.setItem('ori_destaque_produtos', JSON.stringify(destaqueProdutos));
+  document.getElementById('saveBar').classList.add('show');
+}
+function escAttr(s) {
+  return (s || '').toString().replace(/"/g, '&quot;');
+}
+
+function normalize(s) {
+  return (s || '').toString().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+}
+
+let extraCategorias = []; // categorias criadas nesta sessão, ainda sem nenhum produto (pré-visualização)
+let extraMarcas = []; // idem, pra marcas
+
+function getAllCategorias() {
+  return [...new Set([...PRODUCTS.map(p => p.categoria).filter(Boolean), ...extraCategorias])].sort();
+}
+function getAllMarcas() {
+  return [...new Set([...PRODUCTS.map(p => p.marca).filter(Boolean), ...extraMarcas])].sort();
+}
+
+function populateSelectWithNew(selectEl, values, selected) {
+  selectEl.innerHTML = values.map(v => `<option value="${v.replace(/"/g, '&quot;')}">${v}</option>`).join('')
+    + '<option value="__new__">+ Adicionar nova...</option>';
+  selectEl.value = selected && values.includes(selected) ? selected : (values[0] || '__new__');
+}
+
+function attachAddNewHandler(selectEl, label, addToList, onAdded) {
+  selectEl.addEventListener('change', () => {
+    if (selectEl.value !== '__new__') return;
+    openInputModal(`Nova ${label}`, label.charAt(0).toUpperCase() + label.slice(1),
+      (nome) => { addToList(nome); onAdded(nome); },
+      () => {
+        const firstOption = [...selectEl.options].find(o => o.value !== '__new__');
+        selectEl.value = firstOption ? firstOption.value : '';
+      }
+    );
+  });
+}
+
+// Modal genérico de "novo valor" (substitui prompt() nativo, que não é confiável
+// em todos os navegadores/webviews e não vai existir no app React Native).
+let inputModalResolveHandlers = null;
+function openInputModal(title, label, onConfirm, onCancel) {
+  document.getElementById('inputModalTitle').textContent = title;
+  document.getElementById('inputModalLabel').textContent = label;
+  const field = document.getElementById('inputModalField');
+  field.value = '';
+  inputModalResolveHandlers = { onConfirm, onCancel };
+  document.getElementById('inputOverlay').classList.add('open');
+  setTimeout(() => field.focus(), 50);
+}
+function closeInputModal(confirmed, value) {
+  document.getElementById('inputOverlay').classList.remove('open');
+  const handlers = inputModalResolveHandlers;
+  inputModalResolveHandlers = null;
+  if (!handlers) return;
+  if (confirmed && value) handlers.onConfirm && handlers.onConfirm(value);
+  else handlers.onCancel && handlers.onCancel();
+}
+document.getElementById('inputForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  closeInputModal(true, document.getElementById('inputModalField').value.trim());
+});
+document.getElementById('inputCancelBtn').addEventListener('click', () => closeInputModal(false));
+document.getElementById('inputOverlay').addEventListener('click', (e) => {
+  if (e.target.id === 'inputOverlay') closeInputModal(false);
+});
+
+let expandedCategorias = new Set(); // controla só a exibição do resumo de produtos, não a seleção de destaque
+
+function render() {
+  const q = normalize(document.getElementById('search').value);
+  const list = document.getElementById('list');
+  const categorias = getAllCategorias().filter(c => !q || normalize(c).includes(q));
+
+  list.innerHTML = categorias.map(cat => renderCategoriaBlock(cat)).join('');
+
+  list.querySelectorAll('input[data-cat]').forEach(cb => {
+    cb.onclick = (e) => e.stopPropagation();
+    cb.onchange = () => {
+      const cat = cb.dataset.cat;
+      if (cb.checked) {
+        if (destaques.size >= MAX_DESTAQUE_CATEGORIAS) {
+          cb.checked = false;
+          showToast(`Máximo de ${MAX_DESTAQUE_CATEGORIAS} categorias em destaque.`);
+          return;
+        }
+        destaques.add(cat);
+        expandedCategorias.add(cat); // abre automaticamente ao marcar, pra escolher os produtos
+      } else {
+        destaques.delete(cat);
+      }
+      saveDestaques();
+      updateCount();
+      render();
+    };
+  });
+
+  list.querySelectorAll('[data-cat-toggle]').forEach(el => {
+    el.addEventListener('click', () => {
+      const cat = el.dataset.catToggle;
+      if (expandedCategorias.has(cat)) expandedCategorias.delete(cat);
+      else expandedCategorias.add(cat);
+      render();
+    });
+  });
+
+  attachProductPickerHandlers();
+  updateCount();
+}
+
+function renderCategoriaBlock(cat) {
+  const count = PRODUCTS.filter(p => p.categoria === cat).length;
+  const isChecked = destaques.has(cat);
+  const isOpen = expandedCategorias.has(cat);
+  return `
+    <div class="cat-block">
+      <div class="row ${isChecked ? 'checked' : ''}">
+        <input type="checkbox" data-cat="${escAttr(cat)}" ${isChecked ? 'checked' : ''}>
+        <div class="info" data-cat-toggle="${escAttr(cat)}" style="cursor:pointer">
+          <div class="desc">${cat}</div>
+          <div class="meta">${count} ${count === 1 ? 'peça' : 'peças'}</div>
+        </div>
+        <span class="chevron" data-cat-toggle="${escAttr(cat)}" style="cursor:pointer">${isOpen ? '▴' : '▾'}</span>
+      </div>
+      ${isOpen ? renderProductPicker(cat) : ''}
+    </div>
+  `;
+}
+
+function renderProductPicker(cat) {
+  const selected = destaqueProdutos[cat] || [];
+  const produtos = PRODUCTS.filter(p => p.categoria === cat);
+  return `
+    <div class="cat-products">
+      <div class="cat-products-title">
+        Escolha até ${MAX_DESTAQUE_PRODUTOS} produtos dessa categoria pra vitrine da home
+        <span class="mini-count">${selected.length} de ${MAX_DESTAQUE_PRODUTOS}</span>
+      </div>
+      ${produtos.length ? produtos.map(p => `
+        <label class="mini-row ${selected.includes(p.id) ? 'checked' : ''}">
+          <input type="checkbox" data-prod-cat="${escAttr(cat)}" data-prod-id="${escAttr(p.id)}" ${selected.includes(p.id) ? 'checked' : ''}>
+          <img src="${p.foto_local || ''}" alt="" onerror="this.style.visibility='hidden'">
+          <div class="mini-info">
+            <div class="mini-desc">${p.descricao}</div>
+            <div class="mini-meta">${p.marca} — Cód. ${p.codigo}</div>
+          </div>
+        </label>
+      `).join('') : '<div class="hint">Nenhum produto nessa categoria ainda.</div>'}
+    </div>
+  `;
+}
+
+function attachProductPickerHandlers() {
+  document.querySelectorAll('[data-prod-cat]').forEach(cb => {
+    cb.onchange = () => {
+      const cat = cb.dataset.prodCat;
+      const id = cb.dataset.prodId;
+      if (!destaqueProdutos[cat]) destaqueProdutos[cat] = [];
+      if (cb.checked) {
+        if (destaqueProdutos[cat].length >= MAX_DESTAQUE_PRODUTOS) {
+          cb.checked = false;
+          showToast(`Máximo de ${MAX_DESTAQUE_PRODUTOS} produtos por categoria.`);
+          return;
+        }
+        destaqueProdutos[cat].push(id);
+      } else {
+        destaqueProdutos[cat] = destaqueProdutos[cat].filter(x => x !== id);
+      }
+      cb.closest('.mini-row').classList.toggle('checked', cb.checked);
+      const picker = cb.closest('.cat-products');
+      const counter = picker.querySelector('.mini-count');
+      if (counter) counter.textContent = `${destaqueProdutos[cat].length} de ${MAX_DESTAQUE_PRODUTOS}`;
+      saveDestaqueProdutos();
+    };
+  });
+}
+
+function updateCount() {
+  document.getElementById('countBadge').textContent = destaques.size + ' de ' + MAX_DESTAQUE_CATEGORIAS + ' selecionadas';
+}
+
+document.getElementById('search').addEventListener('input', render);
+document.getElementById('viewHome').addEventListener('click', () => window.location.href = 'home.html');
+document.getElementById('homeNavBtn').addEventListener('click', () => window.location.href = 'home.html');
+let clearArmed = false;
+let clearArmedTimeout = null;
+const clearBtn = document.getElementById('clearBtn');
+clearBtn.addEventListener('click', () => {
+  if (destaques.size === 0) return;
+  if (!clearArmed) {
+    clearArmed = true;
+    clearBtn.textContent = 'Confirmar limpeza?';
+    clearArmedTimeout = setTimeout(() => {
+      clearArmed = false;
+      clearBtn.textContent = 'Limpar seleção';
+    }, 3000);
+    return;
+  }
+  clearTimeout(clearArmedTimeout);
+  clearArmed = false;
+  clearBtn.textContent = 'Limpar seleção';
+  destaques.clear();
+  saveDestaques();
+  render();
+});
+
+fetch('products.json').then(r => r.json()).then(data => {
+  PRODUCTS = data;
+  destaques = loadDestaques();
+  destaqueProdutos = loadDestaqueProdutos();
+  render();
+  renderProductList();
+});
+
+// ===== Abas =====
+const tabBtnDestaques = document.getElementById('tabBtnDestaques');
+const tabBtnProdutos = document.getElementById('tabBtnProdutos');
+const tabBtnBanners = document.getElementById('tabBtnBanners');
+const tabBtnInstagram = document.getElementById('tabBtnInstagram');
+const tabDestaques = document.getElementById('tabDestaques');
+const tabProdutos = document.getElementById('tabProdutos');
+const tabBanners = document.getElementById('tabBanners');
+const tabInstagram = document.getElementById('tabInstagram');
+const allTabBtns = [tabBtnDestaques, tabBtnProdutos, tabBtnBanners, tabBtnInstagram];
+const allTabs = [tabDestaques, tabProdutos, tabBanners, tabInstagram];
+function showTab(active) {
+  allTabBtns.forEach(b => b.classList.remove('active'));
+  allTabs.forEach(t => t.style.display = 'none');
+  active.btn.classList.add('active');
+  active.tab.style.display = '';
+}
+tabBtnDestaques.addEventListener('click', () => showTab({ btn: tabBtnDestaques, tab: tabDestaques }));
+tabBtnProdutos.addEventListener('click', () => showTab({ btn: tabBtnProdutos, tab: tabProdutos }));
+tabBtnBanners.addEventListener('click', () => showTab({ btn: tabBtnBanners, tab: tabBanners }));
+tabBtnInstagram.addEventListener('click', () => showTab({ btn: tabBtnInstagram, tab: tabInstagram }));
+
+// ===== Aba Banners =====
+let banners = [];
+function loadBanners() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('ori_banners') || '[]');
+    if (saved.length) return saved;
+  } catch (e) {}
+  return [
+    'assets/banner_superior/gde_5_0.jpg',
+    'assets/banner_superior/gde_6_0.jpg',
+    'assets/banner_superior/gde_banner-site-instagra.jpg'
+  ];
+}
+function saveBanners() {
+  localStorage.setItem('ori_banners', JSON.stringify(banners));
+  document.getElementById('saveBar').classList.add('show');
+}
+function renderBanners() {
+  const listEl = document.getElementById('bannerList');
+  listEl.innerHTML = banners.map((src, i) => `
+    <div class="row">
+      <img src="${src}" alt="">
+      <div class="info">
+        <div class="desc">Banner ${i + 1}</div>
+        <div class="meta">${i === 0 ? 'Primeiro a aparecer' : `Posição ${i + 1}`}</div>
+      </div>
+      <button type="button" class="edit-btn" data-move-up="${i}" ${i === 0 ? 'disabled style="opacity:.4;cursor:default"' : ''}>↑</button>
+      <button type="button" class="edit-btn" data-move-down="${i}" ${i === banners.length - 1 ? 'disabled style="opacity:.4;cursor:default"' : ''}>↓</button>
+      <button type="button" class="edit-btn" data-remove="${i}" style="color:#b91c1c">Remover</button>
+    </div>
+  `).join('') || '<div class="hint">Nenhum banner cadastrado.</div>';
+
+  listEl.querySelectorAll('[data-move-up]').forEach(btn => btn.onclick = () => {
+    const i = parseInt(btn.dataset.moveUp, 10);
+    if (i <= 0) return;
+    [banners[i - 1], banners[i]] = [banners[i], banners[i - 1]];
+    saveBanners(); renderBanners();
+  });
+  listEl.querySelectorAll('[data-move-down]').forEach(btn => btn.onclick = () => {
+    const i = parseInt(btn.dataset.moveDown, 10);
+    if (i >= banners.length - 1) return;
+    [banners[i + 1], banners[i]] = [banners[i], banners[i + 1]];
+    saveBanners(); renderBanners();
+  });
+  listEl.querySelectorAll('[data-remove]').forEach(btn => btn.onclick = () => {
+    const i = parseInt(btn.dataset.remove, 10);
+    banners.splice(i, 1);
+    saveBanners(); renderBanners();
+  });
+}
+document.getElementById('addBannerBtn').addEventListener('click', () => {
+  document.getElementById('bannerFileInput').click();
+});
+document.getElementById('bannerFileInput').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    banners.push(reader.result);
+    saveBanners();
+    renderBanners();
+    showToast('Banner adicionado.');
+  };
+  reader.readAsDataURL(file);
+  e.target.value = '';
+});
+banners = loadBanners();
+renderBanners();
+
+// ===== Aba Instagram =====
+let instaPosts = [];
+function loadInstaPosts() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('ori_instagram_posts') || '[]');
+    if (saved.length) return saved;
+  } catch (e) {}
+  return [
+    'assets/instagram/post1.jpg',
+    'assets/instagram/post2.jpg',
+    'assets/instagram/post3.jpg',
+    'assets/instagram/post4.jpg',
+    'assets/instagram/post5.jpg',
+    'assets/instagram/post6.jpg'
+  ];
+}
+function saveInstaPosts() {
+  localStorage.setItem('ori_instagram_posts', JSON.stringify(instaPosts));
+  document.getElementById('saveBar').classList.add('show');
+}
+function renderInstaPosts() {
+  const listEl = document.getElementById('instaList');
+  listEl.innerHTML = instaPosts.map((src, i) => `
+    <div class="row">
+      <img src="${src}" alt="">
+      <div class="info">
+        <div class="desc">Foto ${i + 1}</div>
+        <div class="meta">${i === 0 ? 'Primeira da grade' : `Posição ${i + 1}`}</div>
+      </div>
+      <button type="button" class="edit-btn" data-move-up="${i}" ${i === 0 ? 'disabled style="opacity:.4;cursor:default"' : ''}>↑</button>
+      <button type="button" class="edit-btn" data-move-down="${i}" ${i === instaPosts.length - 1 ? 'disabled style="opacity:.4;cursor:default"' : ''}>↓</button>
+      <button type="button" class="edit-btn" data-remove="${i}" style="color:#b91c1c">Remover</button>
+    </div>
+  `).join('') || '<div class="hint">Nenhuma foto cadastrada.</div>';
+
+  listEl.querySelectorAll('[data-move-up]').forEach(btn => btn.onclick = () => {
+    const i = parseInt(btn.dataset.moveUp, 10);
+    if (i <= 0) return;
+    [instaPosts[i - 1], instaPosts[i]] = [instaPosts[i], instaPosts[i - 1]];
+    saveInstaPosts(); renderInstaPosts();
+  });
+  listEl.querySelectorAll('[data-move-down]').forEach(btn => btn.onclick = () => {
+    const i = parseInt(btn.dataset.moveDown, 10);
+    if (i >= instaPosts.length - 1) return;
+    [instaPosts[i + 1], instaPosts[i]] = [instaPosts[i], instaPosts[i + 1]];
+    saveInstaPosts(); renderInstaPosts();
+  });
+  listEl.querySelectorAll('[data-remove]').forEach(btn => btn.onclick = () => {
+    const i = parseInt(btn.dataset.remove, 10);
+    instaPosts.splice(i, 1);
+    saveInstaPosts(); renderInstaPosts();
+  });
+}
+document.getElementById('addInstaBtn').addEventListener('click', () => {
+  document.getElementById('instaFileInput').click();
+});
+document.getElementById('instaFileInput').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    instaPosts.push(reader.result);
+    saveInstaPosts();
+    renderInstaPosts();
+    showToast('Foto adicionada.');
+  };
+  reader.readAsDataURL(file);
+  e.target.value = '';
+});
+instaPosts = loadInstaPosts();
+renderInstaPosts();
+
+// ===== Aba Produtos: listar / novo / editar (só em memória, pré-visualização) =====
+let editingId = null;
+let pendingPhotoDataUrl = null;
+
+const fMarcaEl = document.getElementById('fMarca');
+const fCategoriaEl = document.getElementById('fCategoria');
+attachAddNewHandler(fMarcaEl, 'marca', (nome) => extraMarcas.push(nome), (nome) => populateSelectWithNew(fMarcaEl, getAllMarcas(), nome));
+attachAddNewHandler(fCategoriaEl, 'categoria', (nome) => extraCategorias.push(nome), (nome) => populateSelectWithNew(fCategoriaEl, getAllCategorias(), nome));
+
+document.getElementById('newCategoryBtn').addEventListener('click', () => {
+  openInputModal('Nova categoria', 'Nome da categoria', (nome) => {
+    extraCategorias.push(nome);
+    showToast(`Categoria "${nome}" criada nesta sessão (pré-visualização).`);
+    render();
+  });
+});
+
+function renderProductList() {
+  const q = normalize(document.getElementById('productSearch').value);
+  const listEl = document.getElementById('productList');
+  const filtered = PRODUCTS.filter(p => !q ||
+    normalize(p.descricao).includes(q) || normalize(p.codigo).includes(q) || normalize(p.marca).includes(q)
+  ).slice(0, 60);
+
+  listEl.innerHTML = filtered.map(p => `
+    <div class="row">
+      <img src="${p.foto_local || ''}" alt="" onerror="this.style.visibility='hidden'">
+      <div class="info">
+        <div class="desc">${p.descricao}</div>
+        <div class="meta">${p.marca} — Cód. ${p.codigo}${p.linha ? ' — Linha ' + p.linha : ''}</div>
+      </div>
+      <button type="button" class="edit-btn" data-edit="${p.id}">Editar</button>
+    </div>
+  `).join('') + (filtered.length === 60 ? '<div class="hint">Mostrando os primeiros 60 resultados — refine a busca pra achar outros.</div>' : '');
+
+  listEl.querySelectorAll('[data-edit]').forEach(btn => {
+    btn.onclick = () => openProductModal(btn.dataset.edit);
+  });
+}
+document.getElementById('productSearch').addEventListener('input', renderProductList);
+
+function openProductModal(id) {
+  editingId = id || null;
+  pendingPhotoDataUrl = null;
+  const p = id ? PRODUCTS.find(x => x.id === id) : null;
+
+  document.getElementById('modalTitle').textContent = p ? 'Editar produto' : 'Novo produto';
+  document.getElementById('fCodigo').value = p ? p.codigo || '' : '';
+  document.getElementById('fOriginal').value = p ? p.original || '' : '';
+  populateSelectWithNew(fMarcaEl, getAllMarcas(), p ? p.marca : '');
+  populateSelectWithNew(fCategoriaEl, getAllCategorias(), p ? p.categoria : '');
+  document.getElementById('fDescricao').value = p ? p.descricao || '' : '';
+
+  let aplicacoesIniciais = [];
+  if (p && p.aplicacoes && p.aplicacoes.length) {
+    aplicacoesIniciais = p.aplicacoes.map(a => ({
+      veiculo: a.veiculo || '', conversao: a.conversao || '', ano_apos: a.ano_apos || '', ate: a.ate || ''
+    }));
+  } else if (p && (p.veiculos || p.numero_conversao || p.ano_apos || p.ate)) {
+    aplicacoesIniciais = [{ veiculo: p.veiculos || '', conversao: p.numero_conversao || '', ano_apos: p.ano_apos || '', ate: p.ate || '' }];
+  }
+  renderAplicacoesRows(aplicacoesIniciais);
+
+  document.getElementById('fPeso').value = p ? p.peso_liquido || '' : '';
+  document.getElementById('fBarras').value = p ? p.barras || '' : '';
+  document.getElementById('fPreco').value = p && p.preco != null ? p.preco : '';
+  document.getElementById('fPhoto').value = '';
+
+  const linhasAtivas = p ? (p.linha || '').split(',').map(s => s.trim()) : [];
+  document.querySelectorAll('.fLinha').forEach(cb => { cb.checked = linhasAtivas.includes(cb.value); });
+
+  const preview = document.getElementById('photoPreview');
+  if (p && p.foto_local) {
+    preview.className = 'photo-preview';
+    preview.innerHTML = `<img src="${p.foto_local}" alt="">`;
+  } else {
+    preview.className = 'photo-preview empty';
+    preview.textContent = 'sem foto';
+  }
+
+  document.getElementById('productOverlay').classList.add('open');
+}
+
+function renderAplicacoesRows(rows) {
+  const list = document.getElementById('aplicacoesList');
+  const data = rows && rows.length ? rows : [{ veiculo: '', conversao: '', ano_apos: '', ate: '' }];
+  list.innerHTML = data.map(a => `
+    <div class="aplicacao-row">
+      <input type="text" placeholder="Veículo" class="apVeiculo" value="${(a.veiculo || '').replace(/"/g, '&quot;')}">
+      <input type="text" placeholder="Cód. conversão" class="apConversao" value="${(a.conversao || '').replace(/"/g, '&quot;')}">
+      <input type="text" placeholder="Ano a partir de" class="apAnoApos" value="${(a.ano_apos || '').replace(/"/g, '&quot;')}">
+      <input type="text" placeholder="Ano até" class="apAte" value="${(a.ate || '').replace(/"/g, '&quot;')}">
+      <button type="button" class="remove-row-btn" title="Remover">&times;</button>
+    </div>
+  `).join('');
+  list.querySelectorAll('.remove-row-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      btn.closest('.aplicacao-row').remove();
+      if (!list.querySelector('.aplicacao-row')) renderAplicacoesRows([]);
+    });
+  });
+}
+
+document.getElementById('addAplicacaoBtn').addEventListener('click', () => {
+  const list = document.getElementById('aplicacoesList');
+  const row = document.createElement('div');
+  row.className = 'aplicacao-row';
+  row.innerHTML = `
+    <input type="text" placeholder="Veículo" class="apVeiculo">
+    <input type="text" placeholder="Cód. conversão" class="apConversao">
+    <input type="text" placeholder="Ano a partir de" class="apAnoApos">
+    <input type="text" placeholder="Ano até" class="apAte">
+    <button type="button" class="remove-row-btn" title="Remover">&times;</button>
+  `;
+  row.querySelector('.remove-row-btn').addEventListener('click', () => {
+    row.remove();
+    if (!list.querySelector('.aplicacao-row')) renderAplicacoesRows([]);
+  });
+  list.appendChild(row);
+});
+
+document.getElementById('newProductBtn').addEventListener('click', () => openProductModal(null));
+document.getElementById('cancelProductBtn').addEventListener('click', () => {
+  document.getElementById('productOverlay').classList.remove('open');
+});
+document.getElementById('productOverlay').addEventListener('click', (e) => {
+  if (e.target.id === 'productOverlay') document.getElementById('productOverlay').classList.remove('open');
+});
+
+document.getElementById('fPhoto').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    pendingPhotoDataUrl = reader.result;
+    const preview = document.getElementById('photoPreview');
+    preview.className = 'photo-preview';
+    preview.innerHTML = `<img src="${pendingPhotoDataUrl}" alt="">`;
+  };
+  reader.readAsDataURL(file);
+});
+
+document.getElementById('productForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const linhas = [...document.querySelectorAll('.fLinha:checked')].map(cb => cb.value).join(', ');
+
+  const aplicacoes = [...document.querySelectorAll('.aplicacao-row')].map(row => ({
+    veiculo: row.querySelector('.apVeiculo').value.trim(),
+    conversao: row.querySelector('.apConversao').value.trim(),
+    ano_apos: row.querySelector('.apAnoApos').value.trim(),
+    ate: row.querySelector('.apAte').value.trim()
+  })).filter(a => a.veiculo || a.conversao || a.ano_apos || a.ate);
+
+  const data = {
+    codigo: document.getElementById('fCodigo').value.trim(),
+    original: document.getElementById('fOriginal').value.trim(),
+    marca: document.getElementById('fMarca').value.trim(),
+    categoria: document.getElementById('fCategoria').value.trim(),
+    descricao: document.getElementById('fDescricao').value.trim(),
+    veiculos: aplicacoes.map(a => a.veiculo).filter(Boolean).join(' / '),
+    numero_conversao: aplicacoes.map(a => a.conversao).filter(Boolean).join(', '),
+    ano_apos: aplicacoes[0] ? aplicacoes[0].ano_apos : '',
+    ate: aplicacoes[0] ? aplicacoes[0].ate : '',
+    aplicacoes: aplicacoes,
+    peso_liquido: document.getElementById('fPeso').value.trim(),
+    barras: document.getElementById('fBarras').value.trim(),
+    preco: document.getElementById('fPreco').value ? parseFloat(document.getElementById('fPreco').value) : null,
+    linha: linhas
+  };
+
+  if (editingId) {
+    const p = PRODUCTS.find(x => x.id === editingId);
+    Object.assign(p, data);
+    if (pendingPhotoDataUrl) { p.foto_local = pendingPhotoDataUrl; p.foto_local_gde = pendingPhotoDataUrl; }
+    showToast('Produto atualizado nesta sessão (pré-visualização).');
+  } else {
+    const newProduct = Object.assign({ id: 'new-' + Date.now() }, data);
+    if (pendingPhotoDataUrl) { newProduct.foto_local = pendingPhotoDataUrl; newProduct.foto_local_gde = pendingPhotoDataUrl; }
+    PRODUCTS.unshift(newProduct);
+    showToast('Produto adicionado nesta sessão (pré-visualização).');
+  }
+
+  document.getElementById('productOverlay').classList.remove('open');
+  renderProductList();
+});
+
+let toastTimeout = null;
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  clearTimeout(toastTimeout);
+  toastTimeout = setTimeout(() => toast.classList.remove('show'), 3500);
+}
+</script>
+
+</body>
+</html>

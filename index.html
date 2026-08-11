@@ -1,0 +1,1143 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ori Peças — Demo de Catálogo</title>
+<style>
+  :root {
+    --bg: #f4f5f7;
+    --surface: #ffffff;
+    --text: #1c1e21;
+    --text-dim: #6b7280;
+    --accent: #325387;
+    --accent-light: #4d8bba;
+    --accent-dark: #071b3c;
+    --heading: #01162b;
+    --border: #e5e7eb;
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; }
+  html {
+    overflow-x: hidden;
+    color-scheme: light;
+  }
+  body {
+    margin: 0; padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .topbar {
+    position: sticky; top: 0; z-index: 10;
+    background: var(--bg);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+  }
+  header {
+    background: linear-gradient(to right, var(--accent) 0%, var(--accent-light) 10%, var(--accent-light) 90%, var(--accent) 100%);
+    color: white;
+    padding: 16px 16px 14px;
+  }
+  header .brand {
+    display: flex; align-items: center; gap: 10px;
+    font-weight: 700; font-size: 20px; margin-bottom: 12px;
+  }
+  header .brand .logo-badge {
+    background: #fff;
+    border-radius: 8px;
+    padding: 4px 6px;
+    display: flex; align-items: center;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+  }
+  header .brand .logo-badge img {
+    height: 30px; display: block;
+  }
+  header .brand .badge {
+    font-size: 10px; font-weight: 600; letter-spacing: 0.5px;
+    background: rgba(255,255,255,0.2);
+    padding: 3px 8px; border-radius: 20px;
+    text-transform: uppercase;
+    flex-shrink: 0;
+  }
+  header .brand .home-btn {
+    display: flex; align-items: center; gap: 5px;
+    font-size: 12.5px; font-weight: 600;
+    background: rgba(255,255,255,0.15);
+    padding: 6px 10px; border-radius: 8px;
+    cursor: pointer;
+    flex-shrink: 0;
+    color: inherit; text-decoration: none;
+  }
+  header .brand .home-btn:active { background: rgba(255,255,255,0.28); }
+  .search-box {
+    display: flex; align-items: center; gap: 8px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 12px;
+    padding: 10px 14px;
+  }
+  .search-box input {
+    flex: 1; border: none; background: transparent; outline: none;
+    color: white; font-size: 15px;
+  }
+  .search-box input::placeholder { color: rgba(255,255,255,0.7); }
+  .search-box svg { flex-shrink: 0; opacity: 0.85; }
+
+  .filters {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+    padding: 10px 16px;
+  }
+  .filter-btn {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-size: 13.5px;
+    font-weight: 500;
+    cursor: pointer;
+    min-width: 0;
+  }
+  .filter-btn.set {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 8%, var(--surface));
+  }
+  .filter-btn .label {
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .filter-btn svg { flex-shrink: 0; opacity: 0.6; }
+  .filter-btn .clear-x {
+    flex-shrink: 0;
+    width: 18px; height: 18px; border-radius: 50%;
+    background: var(--accent);
+    color: white;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px;
+  }
+
+  .option-list { padding: 4px 8px 8px; }
+  .option-item {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 13px 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 14.5px;
+  }
+  .option-item:active { background: var(--bg); }
+  .option-item.selected { color: var(--accent); font-weight: 600; }
+  .option-item > span:first-child { flex: 1; min-width: 0; line-height: 1.3; }
+  .option-item .count {
+    flex-shrink: 0;
+    font-size: 12px; color: var(--text-dim); font-weight: 400;
+    background: var(--bg);
+    padding: 2px 8px;
+    border-radius: 10px;
+  }
+  .option-item.selected .count { color: var(--accent); }
+  .sheet-search {
+    margin: 4px 16px 8px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    font-size: 14px;
+    color: var(--text);
+    width: calc(100% - 32px);
+  }
+  .sheet-title {
+    font-size: 15px; font-weight: 700;
+    padding: 2px 16px 10px;
+  }
+
+  .result-count {
+    padding: 12px 16px 4px;
+    font-size: 13px;
+    color: var(--text-dim);
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  }
+  .pdf-filter-btn {
+    flex-shrink: 0;
+    display: flex; align-items: center; gap: 6px;
+    background: var(--accent-dark); color: white;
+    border: none; border-radius: 8px;
+    padding: 8px 13px; font-size: 12.5px; font-weight: 700;
+    cursor: pointer; white-space: nowrap;
+  }
+  .pdf-filter-btn:active { background: var(--accent); }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 12px;
+    padding: 12px 16px 32px;
+  }
+
+  .card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    overflow: hidden;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+    display: flex; flex-direction: column;
+  }
+  .card:active { transform: scale(0.97); }
+  .card .thumb {
+    aspect-ratio: 1;
+    background: #fff;
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+    border-bottom: 1px solid var(--border);
+  }
+  .card .thumb img {
+    width: 100%; height: 100%; object-fit: contain;
+    padding: 8px;
+  }
+  .card .info { padding: 10px 12px 12px; flex: 1; display: flex; flex-direction: column; gap: 4px; }
+  .card .marca-tag {
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+    color: var(--accent); letter-spacing: 0.4px;
+  }
+  .card .descricao {
+    font-size: 13px; line-height: 1.35;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    overflow: hidden;
+    min-height: 2.6em;
+  }
+  .card .codigo {
+    font-size: 11px; color: var(--text-dim); margin-top: auto;
+  }
+  .card { position: relative; }
+  .card .select-btn {
+    position: absolute; top: 8px; right: 8px; z-index: 2;
+    width: 26px; height: 26px; border-radius: 50%;
+    background: rgba(255,255,255,0.9);
+    border: 1.5px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    color: transparent;
+    transition: all 0.15s;
+  }
+  .card .select-btn.checked {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+  }
+  .card.selected {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+  }
+
+  .empty-state {
+    text-align: center; padding: 60px 20px; color: var(--text-dim);
+  }
+
+  .quote-bar {
+    position: fixed; left: 16px; right: 16px; bottom: 16px; z-index: 50;
+    background: var(--accent-dark);
+    color: white;
+    border-radius: 14px;
+    padding: 13px 16px;
+    display: none;
+    align-items: center; justify-content: space-between; gap: 12px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+    max-width: 448px; margin: 0 auto;
+  }
+  .quote-bar.show { display: flex; }
+  .quote-bar .qcount { font-size: 13.5px; font-weight: 500; }
+  .quote-bar .qcount b { font-size: 15px; }
+  .quote-bar button {
+    background: white; color: var(--accent-dark);
+    border: none; border-radius: 9px;
+    padding: 9px 16px; font-size: 13.5px; font-weight: 700;
+    cursor: pointer;
+  }
+
+  .quote-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 0; border-bottom: 1px solid var(--border);
+  }
+  .quote-item img { width: 44px; height: 44px; object-fit: contain; background: #fff; border-radius: 8px; border: 1px solid var(--border); flex-shrink: 0; }
+  .quote-item .qi-info { flex: 1; min-width: 0; }
+  .quote-item .qi-desc { font-size: 12.5px; line-height: 1.3; }
+  .quote-item .qi-code { font-size: 11px; color: var(--text-dim); }
+  .quote-item .qi-remove {
+    flex-shrink: 0; width: 26px; height: 26px; border-radius: 50%;
+    background: var(--bg); display: flex; align-items: center; justify-content: center;
+    cursor: pointer; color: var(--text-dim); font-size: 14px;
+  }
+  .qty-control {
+    flex-shrink: 0;
+    display: flex; align-items: center; gap: 6px;
+    background: var(--bg);
+    border-radius: 8px;
+    padding: 4px 6px;
+  }
+  .qty-btn {
+    width: 20px; height: 20px; border-radius: 6px;
+    background: var(--surface); border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 13px; font-weight: 700; color: var(--text);
+    user-select: none;
+  }
+  .qty-value {
+    font-size: 13px; font-weight: 600; min-width: 16px; text-align: center;
+  }
+  .whatsapp-btn, .email-btn, .copy-btn {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    font-weight: 700; font-size: 14.5px;
+    border: none; border-radius: 10px; padding: 13px; width: 100%;
+    cursor: pointer;
+  }
+  .whatsapp-btn { background: #25D366; color: white; margin-top: 14px; }
+  .email-btn { background: var(--accent); color: white; margin-top: 8px; }
+  .copy-btn { background: var(--bg); color: var(--text); border: 1px solid var(--border); margin-top: 8px; }
+  .send-buttons[data-disabled="true"] { opacity: 0.45; pointer-events: none; }
+
+  .contact-form {
+    background: var(--bg);
+    border-radius: 12px;
+    padding: 14px;
+    margin: 4px 0 16px;
+  }
+  .contact-form .cf-title {
+    font-size: 12.5px; font-weight: 700; color: var(--text-dim);
+    text-transform: uppercase; letter-spacing: 0.4px;
+    margin-bottom: 10px;
+  }
+  .contact-form input {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 9px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    font-size: 14px;
+    margin-bottom: 8px;
+  }
+  .contact-form input:last-child { margin-bottom: 0; }
+  .contact-form .cf-hint {
+    font-size: 11.5px; color: var(--text-dim); margin-top: 8px;
+  }
+
+  /* Modal */
+  .overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.55);
+    display: none; align-items: flex-end; justify-content: center;
+    z-index: 100;
+  }
+  .overlay.open { display: flex; }
+  .sheet {
+    background: var(--surface);
+    width: 100%; max-width: 480px;
+    border-radius: 20px 20px 0 0;
+    max-height: 88vh; overflow-y: auto;
+    animation: slideUp 0.25s ease-out;
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+  @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  .sheet-handle {
+    width: 40px; height: 4px; background: var(--border);
+    border-radius: 4px; margin: 10px auto;
+  }
+  .sheet .thumb-big {
+    background: #fff;
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px;
+  }
+  .sheet .thumb-big img {
+    max-width: 100%; max-height: 220px; object-fit: contain;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    box-sizing: border-box;
+  }
+  .gallery-strip {
+    display: flex; gap: 8px; overflow-x: auto;
+    padding: 4px 16px 16px;
+  }
+  .gallery-thumb {
+    width: 52px; height: 52px; object-fit: contain;
+    background: #fff;
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    padding: 4px;
+    box-sizing: border-box;
+    flex-shrink: 0;
+    cursor: pointer;
+  }
+  .gallery-thumb.active { border-color: var(--accent); }
+  .sheet .body { padding: 4px 16px 24px; }
+  .sheet h2 { font-size: 17px; margin: 4px 0 12px; line-height: 1.3; }
+  .sheet .row {
+    display: flex; justify-content: space-between; gap: 12px;
+    padding: 9px 0; border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .sheet .row span:first-child { color: var(--text-dim); }
+  .sheet .row span:last-child { text-align: right; font-weight: 500; }
+  .close-btn {
+    position: absolute; top: 14px; right: 16px;
+    width: 30px; height: 30px; border-radius: 50%;
+    background: rgba(0,0,0,0.08);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 16px; color: var(--text);
+  }
+  .sheet-wrap { position: relative; }
+
+  .applic-section {
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+  }
+  .applic-title {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 15.5px; font-weight: 700; color: var(--heading);
+    margin-bottom: 10px;
+  }
+  .applic-badge {
+    font-size: 12.5px; font-weight: 600; color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 10%, var(--surface));
+    padding: 2px 9px; border-radius: 10px;
+  }
+  .applic-card {
+    background: var(--bg);
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+  }
+  .applic-vehicle {
+    display: flex; align-items: center; gap: 8px;
+  }
+  .applic-name { font-weight: 600; font-size: 16.5px; }
+  .applic-gen {
+    font-size: 12px; font-weight: 700; color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+    padding: 2px 8px; border-radius: 8px;
+  }
+  .applic-meta {
+    display: flex; gap: 12px;
+    font-size: 14px; color: var(--text-dim);
+    margin-top: 4px;
+  }
+  .applic-obs {
+    font-size: 13px; color: var(--text-dim); margin-top: 4px; font-style: italic;
+  }
+  .applic-note {
+    font-size: 11px; color: var(--text-dim);
+    text-align: center; margin-top: 10px;
+  }
+
+  footer {
+    text-align: center; padding: 18px; font-size: 11px; color: var(--text-dim);
+  }
+
+  /* Desktop: same side margins as the institutional home page */
+  @media (min-width: 900px) {
+    header .brand, .search-box, .filters, .grid, .result-count {
+      max-width: 1080px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+  }
+
+  /* Telas de celular bem estreitas (ex: iPhone SE, 320px) */
+  @media (max-width: 360px) {
+    .filters { gap: 6px; }
+    .filter-btn { padding: 9px 10px; font-size: 12px; gap: 5px; }
+    .filter-btn svg { width: 11px; height: 11px; }
+    .result-count { flex-wrap: wrap; }
+    .pdf-filter-btn { flex: 1 1 100%; justify-content: center; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <header>
+    <div class="brand">
+      <a class="logo-badge" href="home.html"><img src="assets/logo.png" alt="Ori"></a>
+      <div class="home-btn" id="homeBtn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="m3 9 9-7 9 7"/><path d="M5 10v10a1 1 0 0 0 1 1h3v-6h6v6h3a1 1 0 0 0 1-1V10"/></svg>
+        Limpar Seleção
+      </div>
+      <a class="home-btn" id="adminBtn" href="admin-destaque.html" style="display:none">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        Admin
+      </a>
+      <span class="badge">Demo de conceito</span>
+    </div>
+    <div class="search-box">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input id="searchInput" type="text" placeholder="Buscar por código ou descrição...">
+    </div>
+  </header>
+
+  <div class="filters">
+    <div class="filter-btn" id="brandBtn">
+      <span class="label" id="brandLabel">Todas as marcas</span>
+      <svg id="brandIcon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="filter-btn" id="catBtn">
+      <span class="label" id="catLabel">Todas as categorias</span>
+      <svg id="catIcon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="filter-btn" id="vehicleBtn">
+      <span class="label" id="vehicleLabel">Veículo</span>
+      <svg id="vehicleIcon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="filter-btn" id="linhaBtn">
+      <span class="label" id="linhaLabel">Todas as linhas</span>
+      <svg id="linhaIcon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+  </div>
+</div>
+
+<div class="result-count" id="resultCount"></div>
+<div class="grid" id="grid"></div>
+
+<footer>Demonstração com dados públicos de amostra — não representa o catálogo completo</footer>
+
+<div class="overlay" id="overlay">
+  <div class="sheet-wrap">
+    <div class="sheet" id="sheet"></div>
+  </div>
+</div>
+
+<div class="quote-bar" id="quoteBar">
+  <div class="qcount"><b id="quoteCount">0</b> <span id="quoteCountLabel">itens selecionados</span></div>
+  <button id="quoteBtn">Orçamento</button>
+</div>
+
+<script>
+let PRODUCTS = [];
+let activeBrands = new Set();
+let activeCats = new Set();
+let activeLinhas = new Set();
+let activeVehicle = '';
+let selectedIds = new Set();
+let quantities = {};
+let currentFilteredList = [];
+
+fetch('products.json').then(r => r.json()).then(data => {
+  PRODUCTS = data;
+  renderFilters();
+  render();
+
+  // Link direto pra um produto específico (ex: vindo da vitrine de destaques da home)
+  const params = new URLSearchParams(window.location.search);
+  const produtoId = params.get('produto');
+  if (produtoId && PRODUCTS.some(p => p.id === produtoId)) {
+    openDetail(produtoId);
+  }
+
+  // Chega já filtrado por categoria (ex: vindo da grid de categorias da home)
+  const categoriaParam = params.get('categoria');
+  if (categoriaParam && PRODUCTS.some(p => p.categoria === categoriaParam)) {
+    activeCats.add(categoriaParam);
+    updateFilterButtons();
+    render();
+  }
+});
+
+(function () {
+  let session = null;
+  try { session = JSON.parse(sessionStorage.getItem('ori_session') || 'null'); } catch (e) {}
+  if (session && session.role === 'admin') {
+    document.getElementById('adminBtn').style.display = '';
+  }
+})();
+
+function labelFor(set, allLabel) {
+  if (set.size === 0) return allLabel;
+  if (set.size === 1) return [...set][0];
+  return set.size + ' selecionadas';
+}
+
+function renderFilters() {
+  updateFilterButtons();
+  document.getElementById('brandBtn').onclick = () => openFilterSheet('marca');
+  document.getElementById('catBtn').onclick = () => openFilterSheet('categoria');
+  document.getElementById('linhaBtn').onclick = () => openFilterSheet('linha');
+  document.getElementById('vehicleBtn').onclick = () => openVehicleSheet();
+}
+
+function updateFilterButtons() {
+  const brandBtn = document.getElementById('brandBtn');
+  const brandLabel = document.getElementById('brandLabel');
+  const catBtn = document.getElementById('catBtn');
+  const catLabel = document.getElementById('catLabel');
+  const linhaBtn = document.getElementById('linhaBtn');
+  const linhaLabel = document.getElementById('linhaLabel');
+  const vehicleBtn = document.getElementById('vehicleBtn');
+  const vehicleLabel = document.getElementById('vehicleLabel');
+
+  brandLabel.textContent = labelFor(activeBrands, 'Todas as marcas');
+  brandBtn.classList.toggle('set', activeBrands.size > 0);
+  document.getElementById('brandIcon').style.display = activeBrands.size ? 'none' : '';
+
+  catLabel.textContent = labelFor(activeCats, 'Todas as categorias');
+  catBtn.classList.toggle('set', activeCats.size > 0);
+  document.getElementById('catIcon').style.display = activeCats.size ? 'none' : '';
+
+  linhaLabel.textContent = labelFor(activeLinhas, 'Todas as linhas');
+  linhaBtn.classList.toggle('set', activeLinhas.size > 0);
+  document.getElementById('linhaIcon').style.display = activeLinhas.size ? 'none' : '';
+
+  vehicleLabel.textContent = activeVehicle || 'Veículo';
+  vehicleBtn.classList.toggle('set', !!activeVehicle);
+  document.getElementById('vehicleIcon').style.display = activeVehicle ? 'none' : '';
+}
+
+// Aplica a busca e todos os filtros ativos, EXCETO o indicado em `excludeKind`
+// (marca / categoria / linha / veiculo) — usado pra calcular as contagens de cada
+// filtro considerando os outros filtros já escolhidos.
+function getBaseListExcluding(excludeKind) {
+  const query = document.getElementById('searchInput').value;
+  let list = PRODUCTS.filter(p => matches(p, query));
+  if (excludeKind !== 'marca' && activeBrands.size) {
+    list = list.filter(p => activeBrands.has(p.marca));
+  }
+  if (excludeKind !== 'categoria' && activeCats.size) {
+    list = list.filter(p => activeCats.has(p.categoria));
+  }
+  if (excludeKind !== 'linha' && activeLinhas.size) {
+    list = list.filter(p => (p.linha || '').split(',').map(s => s.trim()).some(l => activeLinhas.has(l)));
+  }
+  if (excludeKind !== 'veiculo' && activeVehicle) {
+    const q = normalize(activeVehicle);
+    list = list.filter(p => normalize(p.descricao).includes(q) || normalize(p.veiculos).includes(q));
+  }
+  return list;
+}
+
+function openFilterSheet(kind) {
+  const isBrand = kind === 'marca';
+  const isCat = kind === 'categoria';
+  const field = isBrand ? 'marca' : (isCat ? 'categoria' : 'linha');
+  const activeSet = isBrand ? activeBrands : (isCat ? activeCats : activeLinhas);
+  const substringMatch = kind === 'linha';
+
+  // Conta em cima do que já está filtrado nas OUTRAS dimensões (marca/categoria/linha/veículo/busca),
+  // sem considerar o próprio filtro que está sendo aberto — assim o número reflete
+  // "quantos itens teria se eu MARCASSE essa opção", dado o que já está ativo.
+  const baseList = getBaseListExcluding(kind);
+
+  const counts = {};
+  const optionSet = new Set();
+  baseList.forEach(p => {
+    const v = p[field];
+    if (!v) return;
+    if (substringMatch) {
+      v.split(',').map(s => s.trim()).filter(Boolean).forEach(part => {
+        optionSet.add(part);
+        counts[part] = (counts[part] || 0) + 1;
+      });
+    } else {
+      optionSet.add(v);
+      counts[v] = (counts[v] || 0) + 1;
+    }
+  });
+  const options = [...optionSet].sort();
+
+  const allLabel = isBrand ? 'Todas as marcas' : (isCat ? 'Todas as categorias' : 'Todas as linhas');
+  const title = isBrand ? 'Filtrar por marca' : (isCat ? 'Filtrar por categoria' : 'Filtrar por linha');
+  const placeholder = isBrand ? 'marca' : (isCat ? 'categoria' : 'linha');
+
+  function renderList(filterText) {
+    const q = normalize(filterText || '');
+    const filtered = options.filter(o => normalize(o).includes(q));
+    const listEl = document.getElementById('optionList');
+    let html = '';
+    if (!q) {
+      html += `<div class="option-item ${activeSet.size === 0 ? 'selected' : ''}" data-clear="1">
+        <span>${allLabel}</span><span class="count">${baseList.length}</span>
+      </div>`;
+    }
+    html += filtered.map(o => `
+      <div class="option-item ${activeSet.has(o) ? 'selected' : ''}" data-value="${o.replace(/"/g, '&quot;')}">
+        <span>${activeSet.has(o) ? '☑' : '☐'} ${o}</span><span class="count">${counts[o]}</span>
+      </div>
+    `).join('');
+    if (filtered.length === 0 && q) {
+      html += `<div class="option-item" style="color:var(--text-dim);cursor:default">Nenhum resultado</div>`;
+    }
+    listEl.innerHTML = html;
+    listEl.querySelectorAll('[data-clear]').forEach(el => {
+      el.onclick = () => {
+        activeSet.clear();
+        updateFilterButtons();
+        render();
+        renderList(document.getElementById('sheetSearch').value);
+      };
+    });
+    listEl.querySelectorAll('.option-item[data-value]').forEach(el => {
+      el.onclick = () => {
+        const val = el.dataset.value;
+        if (activeSet.has(val)) activeSet.delete(val); else activeSet.add(val);
+        updateFilterButtons();
+        render();
+        renderList(document.getElementById('sheetSearch').value);
+      };
+    });
+  }
+
+  const sheet = document.getElementById('sheet');
+  sheet.innerHTML = `
+    <div class="sheet-handle"></div>
+    <div class="close-btn" id="closeBtn">&times;</div>
+    <div class="sheet-title">${title} <span style="font-weight:400;font-size:12.5px;color:var(--text-dim)">(pode marcar mais de um)</span></div>
+    <input type="text" class="sheet-search" id="sheetSearch" placeholder="Buscar ${placeholder}...">
+    <div class="option-list" id="optionList"></div>
+  `;
+  renderList('');
+  document.getElementById('sheetSearch').addEventListener('input', (e) => renderList(e.target.value));
+  document.getElementById('overlay').classList.add('open');
+  document.getElementById('closeBtn').onclick = closeDetail;
+}
+
+function openVehicleSheet() {
+  const sheet = document.getElementById('sheet');
+  sheet.innerHTML = `
+    <div class="sheet-handle"></div>
+    <div class="close-btn" id="closeBtn">&times;</div>
+    <div class="sheet-title">Filtrar por veículo</div>
+    <input type="text" class="sheet-search" id="vehicleSearch" placeholder="Ex: Gol, Corolla, Ducato..." value="${(activeVehicle || '').replace(/"/g, '&quot;')}">
+    <div style="padding:0 16px 8px;font-size:12px;color:var(--text-dim)">Busca pelo nome do veículo dentro da descrição da peça.</div>
+    <div class="option-list" id="vehicleCount"></div>
+  `;
+  const input = document.getElementById('vehicleSearch');
+  function updateCount() {
+    activeVehicle = input.value.trim();
+    const q = normalize(activeVehicle);
+    const baseList = getBaseListExcluding('veiculo');
+    const n = q ? baseList.filter(p => normalize(p.descricao).includes(q) || normalize(p.veiculos).includes(q)).length : baseList.length;
+    document.getElementById('vehicleCount').innerHTML =
+      `<div class="option-item" style="cursor:default"><span>${q ? 'Peças compatíveis' : 'Todos os veículos'}</span><span class="count">${n}</span></div>`;
+    updateFilterButtons();
+    render();
+  }
+  input.addEventListener('input', updateCount);
+  updateCount();
+  document.getElementById('overlay').classList.add('open');
+  document.getElementById('closeBtn').onclick = closeDetail;
+  setTimeout(() => input.focus(), 100);
+}
+
+function normalize(s) {
+  return (s || '').toString().toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g, '');
+}
+
+function matches(p, query) {
+  if (!query) return true;
+  const q = normalize(query);
+  return normalize(p.descricao).includes(q) ||
+         normalize(p.codigo).includes(q) ||
+         normalize(p.original).includes(q) ||
+         normalize(p.veiculos).includes(q) ||
+         normalize(p.marca).includes(q);
+}
+
+function render() {
+  const query = document.getElementById('searchInput').value;
+  let list = PRODUCTS.filter(p => matches(p, query));
+  if (activeBrands.size) list = list.filter(p => activeBrands.has(p.marca));
+  if (activeCats.size) list = list.filter(p => activeCats.has(p.categoria));
+  if (activeLinhas.size) list = list.filter(p => (p.linha || '').split(',').map(s => s.trim()).some(l => activeLinhas.has(l)));
+  if (activeVehicle) {
+    const q = normalize(activeVehicle);
+    list = list.filter(p => normalize(p.descricao).includes(q) || normalize(p.veiculos).includes(q));
+  }
+
+  list = list.slice().sort((a, b) => parseInt(a.codigo, 10) - parseInt(b.codigo, 10));
+  currentFilteredList = list;
+
+  const resultCountEl = document.getElementById('resultCount');
+  resultCountEl.innerHTML = `
+    <span>${list.length}${list.length === 1 ? ' peça encontrada' : ' peças encontradas'}</span>
+    <button class="pdf-filter-btn" id="pdfFilterBtn">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+      Baixar catálogo em PDF
+    </button>
+  `;
+  document.getElementById('pdfFilterBtn').onclick = () => {
+    let session = null;
+    try { session = JSON.parse(sessionStorage.getItem('ori_session') || 'null'); } catch (e) {}
+    if (!session) {
+      window.location.href = 'login.html';
+      return;
+    }
+    localStorage.setItem('ori_catalogo_ids', JSON.stringify(currentFilteredList.map(p => p.id)));
+    // abre em nova aba/janela em qualquer tamanho de tela; se o navegador bloquear o popup
+    // (comum em alguns navegadores mobile), cai pra navegação normal na mesma aba
+    const novaJanela = window.open('catalogo.html', '_blank');
+    if (!novaJanela) {
+      window.location.href = 'catalogo.html';
+    }
+  };
+
+  const grid = document.getElementById('grid');
+  if (list.length === 0) {
+    grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1">Nenhuma peça encontrada</div>';
+    return;
+  }
+
+  grid.innerHTML = list.map(p => `
+    <div class="card ${selectedIds.has(p.id) ? 'selected' : ''}" data-id="${p.id}">
+      <div class="select-btn ${selectedIds.has(p.id) ? 'checked' : ''}" data-select="${p.id}">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <div class="thumb"><img loading="lazy" src="${p.foto_local}" alt=""></div>
+      <div class="info">
+        <div class="marca-tag">${p.marca}</div>
+        <div class="descricao">${p.descricao}</div>
+        <div class="codigo">Cód. ${p.codigo}${p.numero_conversao ? ` &mdash; Conv. ${p.numero_conversao}` : ''}</div>
+      </div>
+    </div>
+  `).join('');
+
+  grid.querySelectorAll('.card').forEach(card => {
+    card.onclick = (e) => {
+      if (e.target.closest('[data-select]')) return;
+      openDetail(card.dataset.id);
+    };
+  });
+  grid.querySelectorAll('[data-select]').forEach(btn => {
+    btn.onclick = (e) => {
+      e.stopPropagation();
+      toggleSelect(btn.dataset.select);
+    };
+  });
+}
+
+function toggleSelect(id) {
+  if (selectedIds.has(id)) selectedIds.delete(id);
+  else selectedIds.add(id);
+  updateQuoteBar();
+  render();
+}
+
+function updateQuoteBar() {
+  const bar = document.getElementById('quoteBar');
+  const count = selectedIds.size;
+  document.getElementById('quoteCount').textContent = count;
+  document.getElementById('quoteCountLabel').textContent = count === 1 ? 'item selecionado' : 'itens selecionados';
+  bar.classList.toggle('show', count > 0);
+}
+
+function loadContact() {
+  try { return JSON.parse(localStorage.getItem('ori_contact') || '{}'); } catch (e) { return {}; }
+}
+function saveContact(c) {
+  try { localStorage.setItem('ori_contact', JSON.stringify(c)); } catch (e) {}
+}
+
+function formatCNPJ(v) {
+  const digits = v.replace(/\D/g, '').slice(0, 14);
+  if (digits.length > 11) {
+    // CNPJ: 00.000.000/0000-00
+    let v2 = digits;
+    v2 = v2.replace(/^(\d{2})(\d)/, '$1.$2');
+    v2 = v2.replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3');
+    v2 = v2.replace(/\.(\d{3})(\d)/, '.$1/$2');
+    v2 = v2.replace(/(\d{4})(\d)/, '$1-$2');
+    return v2;
+  }
+  // CPF: 000.000.000-00
+  let v2 = digits;
+  v2 = v2.replace(/^(\d{3})(\d)/, '$1.$2');
+  v2 = v2.replace(/^(\d{3})\.(\d{3})(\d)/, '$1.$2.$3');
+  v2 = v2.replace(/\.(\d{3})(\d)/, '.$1-$2');
+  return v2;
+}
+
+function openQuoteSheet() {
+  const items = PRODUCTS.filter(p => selectedIds.has(p.id));
+  const contact = loadContact();
+  const sheet = document.getElementById('sheet');
+  sheet.innerHTML = `
+    <div class="sheet-handle"></div>
+    <div class="close-btn" id="closeBtn">&times;</div>
+    <div class="sheet-title" id="quoteTitle">Solicitar orçamento (${items.length})</div>
+    <div class="body" style="padding:0 16px 20px" id="quoteList"></div>
+  `;
+  function renderQuoteList() {
+    document.getElementById('quoteTitle').textContent = `Solicitar orçamento (${items.length})`;
+    const listEl = document.getElementById('quoteList');
+    if (items.length === 0) {
+      listEl.innerHTML = '<div class="empty-state">Nenhum item selecionado</div>';
+      return;
+    }
+    listEl.innerHTML = items.map(p => {
+      if (!quantities[p.id]) quantities[p.id] = 1;
+      return `
+      <div class="quote-item">
+        <img src="${p.foto_local}" alt="">
+        <div class="qi-info">
+          <div class="qi-desc">${p.descricao}</div>
+          <div class="qi-code">${p.marca} — Cód. ${p.codigo}</div>
+        </div>
+        <div class="qty-control">
+          <div class="qty-btn" data-qty-down="${p.id}">−</div>
+          <div class="qty-value" id="qty-${p.id}">${quantities[p.id]}</div>
+          <div class="qty-btn" data-qty-up="${p.id}">+</div>
+        </div>
+        <div class="qi-remove" data-remove="${p.id}">&times;</div>
+      </div>
+    `;
+    }).join('') + `
+      <div class="contact-form">
+        <div class="cf-title">Seus dados</div>
+        <input type="text" id="cfNome" placeholder="Seu nome *" value="${(contact.nome || '').replace(/"/g,'&quot;')}">
+        <input type="text" id="cfEmpresa" placeholder="Nome da empresa (opcional)" value="${(contact.empresa || '').replace(/"/g,'&quot;')}">
+        <input type="text" id="cfCnpj" placeholder="CNPJ da empresa ou CPF *" inputmode="numeric" value="${(contact.cnpj || '').replace(/"/g,'&quot;')}">
+        <input type="text" id="cfContato" placeholder="Telefone ou e-mail para retorno *" value="${(contact.contato || '').replace(/"/g,'&quot;')}">
+        <div class="cf-hint" id="cfHint">Preencha nome e um contato para liberar o envio.</div>
+      </div>
+      <div class="send-buttons" id="sendButtons" data-disabled="true">
+        <button class="whatsapp-btn" id="sendWhatsapp">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91S17.5 2 12.04 2zm0 18.15c-1.48 0-2.93-.4-4.2-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.15 8.15 0 0 1-1.25-4.38c0-4.51 3.67-8.18 8.19-8.18 4.51 0 8.18 3.67 8.18 8.19 0 4.51-3.67 8.19-8.19 8.19zm4.48-6.13c-.25-.12-1.46-.72-1.68-.8-.23-.08-.39-.12-.56.12-.16.25-.64.8-.78.96-.15.16-.29.18-.53.06-.25-.12-1.04-.38-1.99-1.22-.73-.66-1.23-1.46-1.37-1.71-.15-.25-.02-.38.11-.51.11-.11.25-.29.37-.43.12-.14.16-.25.25-.41.08-.16.04-.31-.02-.43-.06-.12-.56-1.34-.76-1.84-.2-.48-.41-.42-.56-.42-.14-.01-.31-.01-.47-.01-.16 0-.43.06-.66.31-.22.25-.87.85-.87 2.07 0 1.22.89 2.4 1.01 2.56.12.16 1.75 2.67 4.25 3.74.59.26 1.06.41 1.42.52.6.19 1.14.16 1.57.1.48-.07 1.46-.6 1.67-1.18.21-.58.21-1.07.14-1.18-.06-.1-.22-.16-.47-.28z"/></svg>
+          Enviar pelo WhatsApp
+        </button>
+        <button class="email-btn" id="sendEmail">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 6 10-6"/></svg>
+          Enviar por e-mail
+        </button>
+        <button class="copy-btn" id="copyList">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          Copiar lista
+        </button>
+      </div>
+    `;
+    const nomeEl = document.getElementById('cfNome');
+    const empresaEl = document.getElementById('cfEmpresa');
+    const cnpjEl = document.getElementById('cfCnpj');
+    const contatoEl = document.getElementById('cfContato');
+    const sendButtons = document.getElementById('sendButtons');
+    const hint = document.getElementById('cfHint');
+
+    function validateContact() {
+      const c = {
+        nome: nomeEl.value.trim(),
+        empresa: empresaEl.value.trim(),
+        cnpj: cnpjEl.value.trim(),
+        contato: contatoEl.value.trim()
+      };
+      saveContact(c);
+      const docLen = c.cnpj.replace(/\D/g, '').length;
+      const docOk = docLen === 11 || docLen === 14;
+      const ok = c.nome && c.contato && docOk;
+      sendButtons.dataset.disabled = ok ? 'false' : 'true';
+      if (!c.cnpj) hint.textContent = 'Preencha nome, CNPJ ou CPF e um contato para liberar o envio.';
+      else if (!docOk) hint.textContent = 'CNPJ ou CPF incompleto.';
+      else hint.textContent = 'Tudo certo, pode enviar.';
+      return c;
+    }
+    cnpjEl.addEventListener('input', () => {
+      const pos = cnpjEl.selectionStart;
+      cnpjEl.value = formatCNPJ(cnpjEl.value);
+      validateContact();
+    });
+    [nomeEl, empresaEl, contatoEl].forEach(el => el.addEventListener('input', validateContact));
+    validateContact();
+
+    listEl.querySelectorAll('[data-remove]').forEach(el => {
+      el.onclick = () => {
+        selectedIds.delete(el.dataset.remove);
+        delete quantities[el.dataset.remove];
+        items.splice(items.findIndex(p => p.id === el.dataset.remove), 1);
+        updateQuoteBar();
+        render();
+        renderQuoteList();
+        if (items.length === 0) closeDetail();
+      };
+    });
+    listEl.querySelectorAll('[data-qty-up]').forEach(el => {
+      el.onclick = () => {
+        const id = el.dataset.qtyUp;
+        quantities[id] = (quantities[id] || 1) + 1;
+        document.getElementById('qty-' + id).textContent = quantities[id];
+      };
+    });
+    listEl.querySelectorAll('[data-qty-down]').forEach(el => {
+      el.onclick = () => {
+        const id = el.dataset.qtyDown;
+        quantities[id] = Math.max(1, (quantities[id] || 1) - 1);
+        document.getElementById('qty-' + id).textContent = quantities[id];
+      };
+    });
+    document.getElementById('sendWhatsapp').onclick = () => sendQuoteWhatsapp(items, validateContact());
+    document.getElementById('sendEmail').onclick = () => sendQuoteEmail(items, validateContact());
+    document.getElementById('copyList').onclick = (e) => copyQuoteList(items, validateContact(), e.target.closest('button'));
+  }
+  renderQuoteList();
+  document.getElementById('overlay').classList.add('open');
+  document.getElementById('closeBtn').onclick = closeDetail;
+}
+
+function isValidDoc(v) {
+  const len = (v || '').replace(/\D/g, '').length;
+  return len === 11 || len === 14;
+}
+
+function stripHtmlEntities(s) {
+  return (s || '').toString()
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'")
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function buildQuoteMessage(items, contact) {
+  let msg = 'Olá! Gostaria de um orçamento para as seguintes peças:\n\n';
+  items.forEach((p, i) => {
+    const qty = quantities[p.id] || 1;
+    msg += `${i + 1}. [Qtd: ${qty}] Cód. ${p.codigo} — ${stripHtmlEntities(p.descricao)} (${p.marca})\n`;
+  });
+  msg += '\nDados para retorno:\n';
+  msg += `Nome: ${contact.nome}\n`;
+  if (contact.empresa) msg += `Empresa: ${contact.empresa}\n`;
+  msg += `CNPJ: ${contact.cnpj}\n`;
+  msg += `Contato: ${contact.contato}\n`;
+  msg += '\nAguardo retorno, obrigado!';
+  return msg;
+}
+
+function sendQuoteWhatsapp(items, contact) {
+  if (!contact.nome || !contact.contato || !isValidDoc(contact.cnpj)) return;
+  const url = 'https://api.whatsapp.com/send?text=' + encodeURIComponent(buildQuoteMessage(items, contact));
+  window.open(url, '_blank');
+}
+
+function sendQuoteEmail(items, contact) {
+  if (!contact.nome || !contact.contato || !isValidDoc(contact.cnpj)) return;
+  const subject = 'Solicitação de orçamento - ' + (contact.empresa || contact.nome);
+  const url = 'mailto:?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(buildQuoteMessage(items, contact));
+  window.location.href = url;
+}
+
+function copyQuoteList(items, contact, btn) {
+  if (!contact.nome || !contact.contato || !isValidDoc(contact.cnpj)) return;
+  const text = buildQuoteMessage(items, contact);
+
+  function showCopied() {
+    if (!btn) return;
+    const original = btn.innerHTML;
+    btn.innerHTML = 'Copiado!';
+    setTimeout(() => { btn.innerHTML = original; }, 1500);
+  }
+  function fallbackCopy() {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    try { document.execCommand('copy'); showCopied(); } catch (e) {}
+    document.body.removeChild(ta);
+  }
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(showCopied).catch(fallbackCopy);
+  } else {
+    fallbackCopy();
+  }
+}
+
+function openDetail(id) {
+  const p = PRODUCTS.find(x => x.id === id);
+  if (!p) return;
+  const sheet = document.getElementById('sheet');
+  sheet.innerHTML = `
+    <div class="sheet-handle"></div>
+    <div class="close-btn" id="closeBtn">&times;</div>
+    <div class="thumb-big"><img id="mainPhoto" src="${p.galeria ? p.galeria[0].gde : (p.foto_local_gde || p.foto_local)}" alt=""></div>
+    ${p.galeria && p.galeria.length > 1 ? `
+      <div class="gallery-strip">
+        ${p.galeria.map((g, i) => `
+          <img class="gallery-thumb ${i === 0 ? 'active' : ''}" src="${g.peq}" data-full="${g.gde}">
+        `).join('')}
+      </div>
+    ` : ''}
+    <div class="body">
+      <h2>${p.descricao}</h2>
+      <div style="margin-top:14px">
+        <div class="row"><span>Código Ori</span><span>${p.codigo}</span></div>
+        <div class="row"><span>Código Original</span><span>${p.original || '—'}</span></div>
+        ${p.numero_conversao ? `<div class="row"><span>Código de Conversão</span><span>${p.numero_conversao}</span></div>` : ''}
+        <div class="row"><span>Marca</span><span>${p.marca}</span></div>
+        <div class="row"><span>Categoria</span><span>${p.categoria || '—'}</span></div>
+        <div class="row"><span>Peso líquido</span><span>${p.peso_liquido || '—'}</span></div>
+        <div class="row"><span>Código de barras</span><span>${p.barras || '—'}</span></div>
+      </div>
+      ${p.aplicacoes && p.aplicacoes.length ? `
+        <div class="applic-section">
+          <div class="applic-title">
+            Aplicação veicular
+            <span class="applic-badge">${p.aplicacoes.length} veículos</span>
+          </div>
+          ${p.aplicacoes.map(a => `
+            <div class="applic-card">
+              <div class="applic-vehicle">
+                <span class="applic-name">${a.veiculo}</span>
+                ${a.geracao ? `<span class="applic-gen">${a.geracao}</span>` : ''}
+              </div>
+              <div class="applic-meta">
+                ${a.portas ? `<span>${a.portas} portas</span>` : ''}
+                <span>${a.ano_apos}${a.ate ? ' a ' + a.ate : ' em diante'}</span>
+              </div>
+              ${a.obs ? `<div class="applic-obs">${a.obs}</div>` : ''}
+            </div>
+          `).join('')}
+          <div class="applic-note">Exemplo de como a aplicação por veículo ficará organizada na versão completa.</div>
+        </div>
+      ` : ''}
+    </div>
+  `;
+  document.getElementById('overlay').classList.add('open');
+  document.getElementById('closeBtn').onclick = closeDetail;
+
+  if (p.galeria && p.galeria.length > 1) {
+    const mainPhoto = document.getElementById('mainPhoto');
+    document.querySelectorAll('.gallery-thumb').forEach(thumb => {
+      thumb.onclick = () => {
+        mainPhoto.src = thumb.dataset.full;
+        document.querySelectorAll('.gallery-thumb').forEach(t => t.classList.remove('active'));
+        thumb.classList.add('active');
+      };
+    });
+  }
+}
+
+function closeDetail() {
+  document.getElementById('overlay').classList.remove('open');
+}
+
+document.getElementById('overlay').addEventListener('click', (e) => {
+  if (e.target.id === 'overlay') closeDetail();
+});
+
+document.getElementById('searchInput').addEventListener('input', render);
+document.getElementById('quoteBtn').addEventListener('click', openQuoteSheet);
+document.getElementById('homeBtn').addEventListener('click', goHome);
+
+function goHome() {
+  activeBrands.clear();
+  activeCats.clear();
+  activeLinhas.clear();
+  activeVehicle = '';
+  document.getElementById('searchInput').value = '';
+  updateFilterButtons();
+  render();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+</body>
+</html>

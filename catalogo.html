@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ori — Catálogo Personalizado</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,400;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --accent: #325387;
+    --accent-light: #4d8bba;
+    --accent-dark: #071b3c;
+    --heading: #01162b;
+    --text-dim: #6b7280;
+    --border: #d7dce2;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: #888;
+    font-family: "Open Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: #1c1e21;
+  }
+
+  .toolbar {
+    position: sticky; top: 0; z-index: 10;
+    background: var(--accent-dark); color: white;
+    padding: 12px 20px; display: flex; align-items: center; justify-content: space-between;
+  }
+  .toolbar span { font-size: 13.5px; opacity: 0.85; }
+  .toolbar button {
+    background: white; color: var(--accent-dark); border: none;
+    padding: 9px 18px; border-radius: 8px; font-weight: 700; font-size: 13.5px; cursor: pointer;
+  }
+
+  .page {
+    width: 210mm; min-height: 297mm;
+    margin: 24px auto;
+    background: white;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Em telas estreitas (celular), o #pages (com as páginas A4) é escalado
+     via JS pra caber sem cortar nem exigir scroll horizontal. */
+  #pagesWrap { overflow: hidden; }
+  #pages { transform-origin: top left; }
+
+  /* ---- Cover page (arte pronta: assets/capa_seu_catalogo.png) ---- */
+  .cover-v2 { height: 297mm; padding: 0; }
+  .cover-v2 img.cover-art { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .cover-v2 .meta {
+    position: absolute; left: 58%; right: 0; bottom: 34px;
+    text-align: center;
+    font-size: 12.5px; color: rgba(255,255,255,0.75);
+  }
+
+  /* ---- Product pages ---- */
+  .page-header {
+    background: linear-gradient(100deg, var(--accent-light) 0%, var(--accent) 55%, var(--accent-dark) 100%);
+    color: white; padding: 12px 26px;
+    display: flex; flex-direction: column; align-items: flex-end; justify-content: center;
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 0 34px, 26px 0);
+  }
+  /* Índice por cores das linhas — mesma paleta azul da Ori, em intensidade crescente:
+     Leve (mais clara) → Van (mais forte) → Pesada (mais forte ainda) */
+  .page-header.linha-leve { background: #6ba0cf; }
+  .page-header.linha-van { background: #325387; }
+  .page-header.linha-pesada { background: #0f2140; }
+  .page-header .linha-kicker {
+    font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+    color: #ffffff; margin-bottom: 1px;
+  }
+  .page-header .marca-title { font-weight: 800; font-size: 23px; letter-spacing: 1px; text-transform: uppercase; }
+
+  .category-banner {
+    grid-column: 1 / -1;
+    background: linear-gradient(to right, #b91c1c, #e53935);
+    clip-path: polygon(0 0, 94% 0, 100% 50%, 94% 100%, 0 100%);
+    color: white; font-weight: 800; font-size: 12.5px; letter-spacing: 0.6px; text-transform: uppercase;
+    padding: 8px 20px; margin: 6px 0 2px;
+  }
+
+  .cards-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 24px 22px;
+    padding: 14px 24px;
+  }
+  .catalog-card {
+    border-bottom: 1px solid var(--border);
+    border-left: 1px solid var(--border);
+    border-radius: 4px;
+    box-shadow: -2px 0 3px -2px rgba(0,0,0,0.25), 0 2px 3px -2px rgba(0,0,0,0.25);
+    padding: 2px 0 2px 10px;
+    display: flex; gap: 10px; align-items: center;
+    break-inside: avoid;
+  }
+  .catalog-card .photo {
+    width: 132px; height: 132px; flex-shrink: 0;
+    background: #fff; border-radius: 6px;
+    display: flex; align-items: center; justify-content: center; overflow: hidden;
+    padding: 0;
+  }
+  .catalog-card .photo img { max-width: 100%; max-height: 100%; object-fit: contain; }
+  .catalog-card .text { flex: 1; min-width: 0; }
+  .catalog-card .suitable { font-size: 10px; font-style: italic; color: var(--text-dim); margin-bottom: 3px; }
+  .catalog-card .code { font-weight: 700; font-size: 12.5px; color: var(--heading); }
+  .catalog-card .conv { font-size: 10px; color: var(--accent); font-weight: 600; }
+  .catalog-card .name { font-size: 11px; color: #333; margin-top: 2px; line-height: 1.3; }
+  .catalog-card .app { font-size: 11.5px; font-weight: 700; color: var(--accent-dark); margin-top: 3px; line-height: 1.3; }
+
+  .page-footer {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 24px; font-size: 10px; color: var(--text-dim);
+    border-top: 1px solid var(--border);
+  }
+  .page-footer .num {
+    background: var(--accent); color: white; font-weight: 700;
+    width: 26px; height: 26px; border-radius: 6px;
+    display: flex; align-items: center; justify-content: center; font-size: 12px;
+  }
+
+  @page { size: A4; margin: 0; }
+
+  @media print {
+    html, body { background: white; }
+    * {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+      color-adjust: exact !important;
+    }
+    .toolbar { display: none; }
+    .page { box-shadow: none; margin: 0; page-break-after: always; }
+    #pagesWrap { overflow: visible; height: auto !important; }
+    #pages { transform: none !important; }
+  }
+</style>
+</head>
+<body>
+<script>
+  // Simulação de login (demo) — sem sessão válida, volta pro login.
+  if (!sessionStorage.getItem('ori_session')) {
+    window.location.replace('login.html');
+  }
+</script>
+
+<div class="toolbar">
+  <span>Pré-visualização do catálogo — na janela de impressão, use margens "Nenhuma" e marque "Imprimir gráficos de segundo plano"</span>
+  <button onclick="window.print()">Imprimir / Salvar PDF</button>
+</div>
+
+<div id="pagesWrap">
+  <div id="pages"></div>
+</div>
+
+<script>
+fetch('products.json').then(r => r.json()).then(async items => {
+  const map = {};
+  items.forEach(p => map[p.id] = p);
+
+  let savedIds = [];
+  try { savedIds = JSON.parse(localStorage.getItem('ori_catalogo_ids') || '[]'); } catch (e) {}
+
+  // Sem seleção salva (usuário pediu o catálogo sem marcar nada) => catálogo completo,
+  // ordenado por marca / categoria / código pra ficar organizado mesmo com milhares de peças.
+  const picks = savedIds.length
+    ? savedIds.map(id => map[id]).filter(Boolean)
+    : items.slice().sort((a, b) =>
+        (a.marca || '').localeCompare(b.marca || '') ||
+        (a.categoria || '').localeCompare(b.categoria || '') ||
+        parseInt(a.codigo, 10) - parseInt(b.codigo, 10)
+      );
+
+  const pagesEl = document.getElementById('pages');
+  const today = new Date().toLocaleDateString('pt-br');
+
+  let html = buildCover(picks, today, savedIds.length === 0);
+
+  // espera a fonte carregar antes de medir altura real dos cards
+  if (document.fonts && document.fonts.ready) { try { await document.fonts.ready; } catch (e) {} }
+
+  const measure = createMeasurer();
+  let pageNum = 1;
+
+  getLinhaGroups(picks).forEach(([linha, linhaPicks]) => {
+    const marcaGroups = groupPreservingOrder(linhaPicks, p => p.marca || 'Outras');
+    marcaGroups.forEach(([marca, marcaPicks]) => {
+      measure.setHeader(linha, marca);
+      const items = buildItems(marcaPicks);
+      const chunks = paginateByHeight(items, measure);
+      chunks.forEach(chunk => {
+        html += renderProductPage(linha, marca, chunk, pageNum);
+        pageNum++;
+      });
+    });
+  });
+
+  measure.cleanup();
+  pagesEl.innerHTML = html;
+  fitPagesToScreen();
+});
+
+// Em celular a página A4 (210mm) é mais larga que a tela — escala o conjunto
+// de páginas pra caber sem cortar nem precisar de scroll horizontal.
+function fitPagesToScreen() {
+  const wrap = document.getElementById('pagesWrap');
+  const pages = document.getElementById('pages');
+  if (!pages.querySelector('.page')) return;
+
+  const naturalWidth = 210 * 96 / 25.4; // 210mm em px (96dpi) — não depende de medir o DOM já escalado
+  const sideMargin = 16;
+  const availableWidth = window.innerWidth - sideMargin * 2;
+
+  if (availableWidth < naturalWidth) {
+    const scale = availableWidth / naturalWidth;
+    pages.style.transform = `scale(${scale})`;
+    pages.style.marginLeft = sideMargin + 'px';
+    wrap.style.height = (pages.getBoundingClientRect().height) + 'px';
+  } else {
+    pages.style.transform = '';
+    pages.style.marginLeft = '';
+    wrap.style.height = '';
+  }
+}
+window.addEventListener('resize', fitPagesToScreen);
+
+// Mede a altura real dos itens num clone oculto da página, pra decidir quantas
+// linhas de produto cabem de fato — sem depender de contar "slots" no chute.
+// As imagens (tamanho grande) nunca são reduzidas: quem cede espaço é a paginação.
+function createMeasurer() {
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'position:absolute; left:-9999px; top:0; visibility:hidden;';
+  wrap.innerHTML = `
+    <div class="page">
+      <div class="page-header"><div class="linha-kicker"></div><div class="marca-title"></div></div>
+      <div class="cards-grid"></div>
+      <div class="page-footer"><span>Ori Indústria de Auto Peças LTDA — (11) 2542-5110</span><div class="num">00</div></div>
+    </div>
+  `;
+  document.body.appendChild(wrap);
+  const page = wrap.querySelector('.page');
+  const header = wrap.querySelector('.page-header');
+  const linhaKickerEl = wrap.querySelector('.linha-kicker');
+  const marcaTitleEl = wrap.querySelector('.marca-title');
+  const footer = wrap.querySelector('.page-footer');
+  const grid = wrap.querySelector('.cards-grid');
+  let available = 0;
+
+  function setHeader(linha, marca) {
+    linhaKickerEl.textContent = 'Linha ' + linha;
+    marcaTitleEl.textContent = marca;
+    available = page.getBoundingClientRect().height
+      - header.getBoundingClientRect().height
+      - footer.getBoundingClientRect().height;
+  }
+
+  function heightOf(htmlParts) {
+    grid.innerHTML = htmlParts.join('');
+    return grid.scrollHeight;
+  }
+
+  return {
+    setHeader,
+    heightOf,
+    get available() { return available; },
+    cleanup() { wrap.remove(); }
+  };
+}
+
+const LINHA_ORDER = ['Leve', 'Van', 'Pesada'];
+
+function getLinhasOf(p) {
+  return (p.linha || '').split(',').map(s => s.trim()).filter(Boolean);
+}
+
+// Uma peça pode pertencer a mais de uma linha ao mesmo tempo (ex: "Leve, Van") —
+// nesse caso ela aparece em cada linha correspondente, igual ao filtro do catálogo.
+function getLinhaGroups(picks) {
+  const groups = LINHA_ORDER
+    .map(linha => [linha, picks.filter(p => getLinhasOf(p).includes(linha))])
+    .filter(([, arr]) => arr.length > 0);
+
+  const known = new Set(LINHA_ORDER);
+  const extras = [...new Set(picks.flatMap(getLinhasOf).filter(l => !known.has(l)))];
+  extras.forEach(linha => {
+    groups.push([linha, picks.filter(p => getLinhasOf(p).includes(linha))]);
+  });
+
+  return groups;
+}
+
+function itemHtmlFor(item) {
+  return item.type === 'banner'
+    ? `<div class="category-banner">${item.text}</div>`
+    : renderCard(item.product);
+}
+
+function paginateByHeight(items, measure) {
+  const queue = items.slice();
+  const pages = [];
+  let current = [];
+  let currentHtml = [];
+
+  function finalizePage() {
+    // evita fechar a página com uma faixa de categoria sobrando no final sem nenhum card depois
+    while (current.length && current[current.length - 1].type === 'banner') {
+      queue.unshift(current.pop());
+      currentHtml.pop();
+    }
+    if (current.length) pages.push(current);
+    current = [];
+    currentHtml = [];
+  }
+
+  while (queue.length) {
+    const item = queue.shift();
+    const testHtml = currentHtml.concat(itemHtmlFor(item));
+    const height = measure.heightOf(testHtml);
+    if (height > measure.available && current.length) {
+      // devolve o item que não coube ANTES de mover uma eventual faixa "órfã" de volta,
+      // senão o item furaria na frente da própria faixa da categoria dele
+      queue.unshift(item);
+      finalizePage();
+      continue;
+    }
+    current.push(item);
+    currentHtml.push(itemHtmlFor(item));
+  }
+  finalizePage();
+  return pages;
+}
+
+function groupPreservingOrder(list, keyFn) {
+  const order = [];
+  const map = new Map();
+  list.forEach(item => {
+    const key = keyFn(item);
+    if (!map.has(key)) { map.set(key, []); order.push(key); }
+    map.get(key).push(item);
+  });
+  return order.map(key => [key, map.get(key)]);
+}
+
+function buildItems(marcaPicks) {
+  const catGroups = groupPreservingOrder(marcaPicks, p => p.categoria || 'Diversos');
+  const items = [];
+  catGroups.forEach(([categoria, catPicks]) => {
+    items.push({ type: 'banner', text: categoria });
+    catPicks.forEach(p => items.push({ type: 'card', product: p }));
+  });
+  return items;
+}
+
+function buildCover(picks, today, isFullCatalog) {
+  const countLabel = isFullCatalog
+    ? `${picks.length} peças — catálogo completo`
+    : `${picks.length} peças selecionadas`;
+  return `
+    <div class="page cover-v2">
+      <img class="cover-art" src="assets/capa_seu_catalogo.png" alt="Seu Catálogo">
+      <div class="meta">Gerado em ${today} &nbsp;•&nbsp; ${countLabel}</div>
+    </div>
+  `;
+}
+
+function linhaHeaderClass(linha) {
+  const key = (linha || '').trim().toLowerCase();
+  if (key === 'leve') return 'linha-leve';
+  if (key === 'van') return 'linha-van';
+  if (key === 'pesada') return 'linha-pesada';
+  return '';
+}
+
+function renderProductPage(linha, marca, chunk, pageNum) {
+  return `
+    <div class="page">
+      <div class="page-header ${linhaHeaderClass(linha)}">
+        <div class="linha-kicker">Linha ${linha}</div>
+        <div class="marca-title">${marca}</div>
+      </div>
+      <div class="cards-grid">
+        ${chunk.map(item => item.type === 'banner'
+          ? `<div class="category-banner">${item.text}</div>`
+          : renderCard(item.product)
+        ).join('')}
+      </div>
+      <div class="page-footer">
+        <span>Ori Indústria de Auto Peças LTDA — (11) 2542-5110</span>
+        <div class="num">${String(pageNum).padStart(2, '0')}</div>
+      </div>
+    </div>
+  `;
+}
+
+function renderCard(p) {
+  const { name, app } = splitDesc(p.descricao);
+  return `
+    <div class="catalog-card">
+      <div class="photo"><img src="${p.foto_local}" alt=""></div>
+      <div class="text">
+        <div class="suitable">Suitable to</div>
+        <div class="code">Cód. ${p.codigo}${p.numero_conversao ? ' <span class="conv">• Conv. ' + p.numero_conversao + '</span>' : ''}</div>
+        ${name ? `
+          <div class="name">${name}</div>
+          <div class="app">${app}</div>
+        ` : `<div class="app">${p.descricao}</div>`}
+      </div>
+    </div>
+  `;
+}
+
+function splitDesc(desc) {
+  const idx = desc.indexOf(' - ');
+  if (idx === -1) return { name: null, app: null };
+  return { name: desc.slice(0, idx), app: desc.slice(idx + 3) };
+}
+</script>
+
+</body>
+</html>
