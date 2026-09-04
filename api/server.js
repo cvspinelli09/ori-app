@@ -90,7 +90,7 @@ app.post('/contact', async (req, res) => {
 
   try {
     const { error } = await resend.emails.send({
-      from: 'Ori Auto Peças <onboarding@resend.dev>',
+      from: 'Ori Auto Peças <site@ori.com.br>',
       to: process.env.CONTACT_TO_EMAIL,
       replyTo: email,
       subject: `Contato pelo site — ${nome}`,
