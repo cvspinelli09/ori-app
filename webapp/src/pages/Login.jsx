@@ -19,9 +19,13 @@ export function Login() {
   // a sessão existente ficar disponível — o consumo do que estava pendente acontece só na
   // página de destino, nunca aqui.
   useEffect(() => {
-    if (!session) return;
-    const from = location.state?.from || (localStorage.getItem(PENDING_SELECTION_KEY) ? '/catalogo' : null);
-    if (from) navigate(from, { replace: true });
+  if (!session) return;
+
+  const destination =
+    location.state?.from ||
+      (localStorage.getItem(PENDING_SELECTION_KEY) ? '/catalogo' : '/');
+
+    navigate(destination, { replace: true });
   }, [session, location.state, navigate]);
 
   const handleSendOtp = async (e) => {
@@ -40,10 +44,7 @@ export function Login() {
 
     if (error) {
       setError(error.message);
-      return;
     }
-
-    navigate('/');
   };
 
   return (
