@@ -501,15 +501,24 @@ export function CatalogoPdf2() {
       const pagesEl = pagesElRef.current;
       if (!wrap || !pagesEl || !pagesEl.querySelector('.pdf-page')) return;
 
-      const naturalWidth = (210 * 96) / 25.4;
-      const sideMargin = 16;
-      const availableWidth = window.innerWidth - sideMargin * 2;
+      const firstPage = pagesEl.querySelector('.pdf-page');
+      const naturalWidth = firstPage.offsetWidth;
+      const naturalHeight = pagesEl.scrollHeight;
+
+      const sideMargin = 12;
+      const availableWidth = Math.max(
+        0,
+        document.documentElement.clientWidth - sideMargin * 2
+      );
 
       if (availableWidth < naturalWidth) {
         const scale = availableWidth / naturalWidth;
+
+        pagesEl.style.transformOrigin = 'top left';
         pagesEl.style.transform = `scale(${scale})`;
         pagesEl.style.marginLeft = `${sideMargin}px`;
-        wrap.style.height = `${pagesEl.getBoundingClientRect().height}px`;
+
+        wrap.style.height = `${naturalHeight * scale}px`;
       } else {
         pagesEl.style.transform = '';
         pagesEl.style.marginLeft = '';
