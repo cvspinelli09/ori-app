@@ -1,0 +1,261 @@
+/* =========================================================
+   MinhaConta
+   ========================================================= */
+
+.minha-conta-page {
+  min-height: 100vh;
+  background: #f6f8fb;
+  color: #0f172a;
+}
+
+.minha-conta-header {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 20px 24px 12px;
+}
+
+.minha-conta-back {
+  margin-bottom: 22px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #475569;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.minha-conta-back:hover {
+  color: #0f172a;
+}
+
+.minha-conta-header h1 {
+  margin: 0;
+  font-size: 26px;
+  color: #0f172a;
+}
+
+.minha-conta-header p {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: #64748b;
+}
+
+.minha-conta-content {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 0 24px 48px;
+}
+
+.minha-conta-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.minha-conta-card {
+  padding: 22px;
+  border: 1px solid #e5eaf0;
+  border-radius: 16px;
+  background: #fff;
+}
+
+.minha-conta-card-heading {
+  margin-bottom: 18px;
+}
+
+.minha-conta-card-heading h2 {
+  margin: 0;
+  font-size: 15px;
+  color: #0f172a;
+}
+
+.minha-conta-card-heading p {
+  margin: 4px 0 0;
+  font-size: 11px;
+  color: #64748b;
+}
+
+.minha-conta-grid {
+  display: grid;
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.minha-conta-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.minha-conta-grid label > span {
+  font-size: 11px;
+  font-weight: 600;
+  color: #475569;
+}
+
+.minha-conta-grid input,
+.minha-conta-grid select {
+  width: 100%;
+  height: 40px;
+  box-sizing: border-box;
+  padding: 0 12px;
+  border: 1px solid #dbe3ed;
+  border-radius: 9px;
+  outline: none;
+  background: #fff;
+  font: inherit;
+  font-size: 12px;
+  color: #0f172a;
+}
+
+.minha-conta-grid input:focus,
+.minha-conta-grid select:focus {
+  border-color: #94a3b8;
+}
+
+.minha-conta-grid input:disabled {
+  background: #f8fafc;
+  color: #64748b;
+}
+
+/* =========================================================
+   Preferências
+   ========================================================= */
+
+.minha-conta-preferences-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 65fr) minmax(260px, 35fr);
+  gap: 18px;
+  align-items: stretch;
+}
+
+.minha-conta-preferences-main {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.minha-conta-preferences-side {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.minha-conta-communication {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  cursor: pointer;
+}
+
+.minha-conta-communication input {
+  width: 17px;
+  height: 17px;
+  margin-top: 2px;
+}
+
+.minha-conta-communication div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.minha-conta-communication strong {
+  font-size: 12px;
+  color: #0f172a;
+}
+
+.minha-conta-communication span {
+  max-width: 650px;
+  font-size: 11px;
+  line-height: 1.5;
+  color: #64748b;
+}
+
+.minha-conta-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.minha-conta-primary,
+.minha-conta-secondary {
+  min-width: 122px;
+  min-height: 38px;
+  padding: 0 16px;
+  border-radius: 9px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.minha-conta-primary {
+  border: 1px solid #2563eb;
+  background: #2563eb;
+  color: #fff;
+}
+
+.minha-conta-primary:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.minha-conta-secondary {
+  border: 1px solid #dbe3ed;
+  background: #fff;
+  color: #475569;
+}
+
+.minha-conta-error,
+.minha-conta-success {
+  padding: 10px 12px;
+  border-radius: 9px;
+  font-size: 12px;
+  margin-top: 2px;
+}
+
+.minha-conta-error {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.minha-conta-success {
+  background: #f0fdf4;
+  color: #15803d;
+}
+
+.minha-conta-loading {
+  padding: 40px;
+  color: #64748b;
+  font-size: 13px;
+}
+
+@media (max-width: 700px) {
+  .minha-conta-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .minha-conta-header,
+  .minha-conta-content {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .minha-conta-preferences-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .minha-conta-preferences-side {
+    justify-content: flex-start;
+  }
+
+  .minha-conta-actions {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+}

@@ -1,2 +1,13 @@
 ori-demo-site.zip
 assets/instagram/post3_files/
+
+# React app + API
+webapp/node_modules/
+webapp/dist/
+webapp/.env
+api/node_modules/
+api/.env
+api/backups/
+images_full/
+api/.env.bak
+webapp/reports/

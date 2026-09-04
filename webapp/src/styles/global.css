@@ -1,0 +1,114 @@
+:root {
+  --bg: #f4f5f7;
+  --surface: #ffffff;
+  --text: #1c1e21;
+  --text-dim: #6b7280;
+  --accent: #325387;
+  --accent-light: #4d8bba;
+  --accent-dark: #071b3c;
+  --heading: #01162b;
+  --border: #e5e7eb;
+  --radius: 14px;
+}
+
+* { box-sizing: border-box; }
+
+html {
+  overflow-x: hidden;
+  color-scheme: light;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: inherit; text-decoration: none; }
+img { max-width: 100%; display: block; }
+button { font-family: inherit; }
+
+.wrap { max-width: 1080px; margin: 0 auto; }
+
+/* ===== Header (compartilhado entre Home e Catálogo institucional) ===== */
+header.site-header {
+  position: sticky; top: 0; z-index: 20;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+.header-inner {
+  max-width: 1080px; margin: 0 auto;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 20px;
+}
+.header-inner img { height: 56px; }
+.header-inner nav { display: flex; gap: 28px; align-items: center; }
+.site-header nav a { font-size: 16px; font-weight: 600; color: var(--text); text-transform: uppercase; }
+.site-header nav a:hover { color: var(--accent); }
+.nav-cta {
+  background: var(--accent); color: white !important;
+  padding: 9px 18px; border-radius: 8px;
+  font-weight: 700 !important;
+  text-transform: none;
+}
+.admin-link { color: var(--accent) !important; }
+.login-link {
+  font-weight: 700 !important; color: var(--accent-dark) !important;
+  border: 1.5px solid var(--border); border-radius: 8px; padding: 8px 16px !important;
+}
+.login-link:hover { border-color: var(--accent); color: var(--accent) !important; }
+.session-badge {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 12.5px; color: var(--text-dim); font-weight: 500;
+  padding-left: 4px;
+}
+.session-badge .role-tag {
+  font-size: 10.5px; font-weight: 700; text-transform: uppercase;
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+  color: var(--accent); padding: 2px 8px; border-radius: 10px;
+}
+.session-badge button { font-size: 12.5px; font-weight: 600; color: var(--text-dim); text-decoration: underline; background: none; border: none; cursor: pointer; padding: 0; }
+.mobile-nav .session-badge { padding: 12px 4px 0; }
+.menu-toggle {
+  display: none;
+  background: none; border: none; color: var(--heading); cursor: pointer;
+  padding: 6px; border-radius: 8px;
+}
+.menu-toggle:active { background: var(--bg); }
+.mobile-nav {
+  display: none;
+  flex-direction: column; gap: 2px;
+  padding: 8px 20px 16px;
+  border-top: 1px solid var(--border);
+}
+.mobile-nav a, .mobile-nav a:visited {
+  padding: 12px 4px; font-size: 16px; font-weight: 600; color: var(--text);
+  border-bottom: 1px solid var(--border);
+  display: block;
+}
+.mobile-nav a.nav-cta {
+  text-align: center; border-bottom: none; border-radius: 8px; margin-top: 10px; padding: 13px;
+}
+@media (max-width: 720px) {
+  .header-inner nav { display: none; }
+  .menu-toggle { display: flex; align-items: center; justify-content: center; }
+  .mobile-nav.open { display: flex; }
+}
+
+/* ===== Botões/cards genéricos ===== */
+.btn-primary {
+  background: var(--accent); color: white; border: none;
+  padding: 13px 24px; border-radius: 10px; font-weight: 700; font-size: 14.5px;
+  cursor: pointer;
+}
+.btn-primary:hover { background: var(--accent-dark); }
+
+footer.site-footer {
+  background: var(--accent-dark); color: rgba(255,255,255,0.7);
+  text-align: center; padding: 22px 20px; font-size: 12.5px;
+}
+footer.site-footer b { color: white; }
