@@ -1416,7 +1416,7 @@ export function Catalogo2() {
         <input
           type="text"
           className="catalogo2-filter-input"
-          placeholder="Ex.: Arim Componentes"
+          placeholder="Ex.: Catálogo Linha Pesada"
           value={saveModalName}
           onChange={(e) => setSaveModalName(e.target.value)}
           autoFocus
