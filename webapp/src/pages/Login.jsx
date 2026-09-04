@@ -35,8 +35,15 @@ export function Login() {
   const handleVerifyOtp = async (e) => {
     e.preventDefault();
     setError('');
+
     const { error } = await verifyEmailOtp(email, token);
-    if (error) setError(error.message);
+
+    if (error) {
+      setError(error.message);
+      return;
+    }
+
+    navigate('/');
   };
 
   return (
