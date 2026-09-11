@@ -6,13 +6,24 @@ import '../styles/catalogo2.css';
 
 const PENDING_SELECTION_KEY = 'catalogo2_pending_selection';
 
-function buildFiltrosSnapshot({ selectedCategories, selectedLines, selectedBrands, applicationSearch, codeOriSearch, conversionSearch, barcodeSearch, sortBy }) {
+function buildFiltrosSnapshot({
+  selectedCategories,
+  selectedLines,
+  selectedBrands,
+  applicationSearch,
+  codeOriSearch,
+  originalSearch,
+  conversionSearch,
+  barcodeSearch,
+  sortBy,
+}) {
   return {
     categories: selectedCategories,
     lines: selectedLines,
     brands: selectedBrands,
     application: applicationSearch,
     code: codeOriSearch,
+    original: originalSearch,
     conversion: conversionSearch,
     barcode: barcodeSearch,
     sortBy,
@@ -52,16 +63,25 @@ function countMatchingProducts(produtos, filtros) {
     });
   }
   if (filtros.code?.trim()) {
-    const q = normalize(filtros.code);
-    list = list.filter((p) => normalize(p.codigo).includes(q));
+    const q = normalizeCode(filtros.code);
+    list = list.filter((p) => normalizeCode(p.codigo).includes(q));
   }
+
+  if (filtros.original?.trim()) {
+    const q = normalizeCode(filtros.original);
+    list = list.filter((p) => normalizeCode(p.original).includes(q));
+  }
+
   if (filtros.conversion?.trim()) {
-    const q = normalize(filtros.conversion);
-    list = list.filter((p) => normalize(p.numero_conversao).includes(q));
+    const q = normalizeCode(filtros.conversion);
+    list = list.filter((p) =>
+      normalizeCode(p.numero_conversao).includes(q)
+    );
   }
+
   if (filtros.barcode?.trim()) {
-    const q = normalize(filtros.barcode);
-    list = list.filter((p) => normalize(p.barras).includes(q));
+    const q = normalizeCode(filtros.barcode);
+    list = list.filter((p) => normalizeCode(p.barras).includes(q));
   }
 
   return list.length;
@@ -78,6 +98,12 @@ function normalize(s) {
     .toLowerCase()
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '');
+}
+
+function normalizeCode(value) {
+  return String(value ?? '')
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, '');
 }
 
 function formatMultiSelectLabel(selected, allLabel) {
@@ -210,6 +236,7 @@ export function Catalogo2() {
   const [selectedBrands, setSelectedBrands] = useState([]);
   const [applicationSearch, setApplicationSearch] = useState('');
   const [codeOriSearch, setCodeOriSearch] = useState('');
+  const [originalSearch, setOriginalSearch] = useState('');
   const [conversionSearch, setConversionSearch] = useState('');
   const [barcodeSearch, setBarcodeSearch] = useState('');
   const [detailProduct, setDetailProduct] = useState(null);
@@ -239,22 +266,44 @@ export function Catalogo2() {
   }
 
   const currentFiltros = useMemo(
-    () => buildFiltrosSnapshot({ selectedCategories, selectedLines, selectedBrands, applicationSearch, codeOriSearch, conversionSearch, barcodeSearch, sortBy }),
-    [selectedCategories, selectedLines, selectedBrands, applicationSearch, codeOriSearch, conversionSearch, barcodeSearch, sortBy]
-  );
+  () =>
+    buildFiltrosSnapshot({
+      selectedCategories,
+      selectedLines,
+      selectedBrands,
+      applicationSearch,
+      codeOriSearch,
+      originalSearch,
+      conversionSearch,
+      barcodeSearch,
+      sortBy,
+    }),
+  [
+    selectedCategories,
+    selectedLines,
+    selectedBrands,
+    applicationSearch,
+    codeOriSearch,
+    originalSearch,
+    conversionSearch,
+    barcodeSearch,
+    sortBy,
+  ]
+);
 
   const isSelectionDirty = openSelectionId !== null && !sameFiltros(currentFiltros, openSelectionSnapshot);
 
   function applyFiltros(filtros) {
-    setSelectedCategories(filtros.categories ?? []);
-    setSelectedLines(filtros.lines ?? []);
-    setSelectedBrands(filtros.brands ?? []);
-    setApplicationSearch(filtros.application ?? '');
-    setCodeOriSearch(filtros.code ?? '');
-    setConversionSearch(filtros.conversion ?? '');
-    setBarcodeSearch(filtros.barcode ?? '');
-    setSortBy(filtros.sortBy ?? 'codigo');
-  }
+  setSelectedCategories(filtros.categories ?? []);
+  setSelectedLines(filtros.lines ?? []);
+  setSelectedBrands(filtros.brands ?? []);
+  setApplicationSearch(filtros.application ?? '');
+  setCodeOriSearch(filtros.code ?? '');
+  setOriginalSearch(filtros.original ?? '');
+  setConversionSearch(filtros.conversion ?? '');
+  setBarcodeSearch(filtros.barcode ?? '');
+  setSortBy(filtros.sortBy ?? 'codigo');
+}
 
   // Retomada pós-login: só consome o snapshot pendente aqui em /catalogo, e só quando já
   // existe sessão autenticada válida — nunca antes disso.
@@ -482,7 +531,7 @@ export function Catalogo2() {
 
   useEffect(() => {
     setVisibleCount(80);
-  }, [
+    }, [
     search,
     sortBy,
     selectedCategories,
@@ -490,6 +539,7 @@ export function Catalogo2() {
     selectedBrands,
     applicationSearch,
     codeOriSearch,
+    originalSearch,
     conversionSearch,
     barcodeSearch,
   ]);
@@ -677,26 +727,34 @@ export function Catalogo2() {
     }
 
     if (codeOriSearch.trim()) {
-      const q = normalize(codeOriSearch);
+      const q = normalizeCode(codeOriSearch);
 
       list = list.filter((p) =>
-        normalize(p.codigo).includes(q)
+        normalizeCode(p.codigo).includes(q)
+      );
+    }
+
+    if (originalSearch.trim()) {
+      const q = normalizeCode(originalSearch);
+
+      list = list.filter((p) =>
+        normalizeCode(p.original).includes(q)
       );
     }
 
     if (conversionSearch.trim()) {
-      const q = normalize(conversionSearch);
+      const q = normalizeCode(conversionSearch);
 
       list = list.filter((p) =>
-        normalize(p.numero_conversao).includes(q)
+        normalizeCode(p.numero_conversao).includes(q)
       );
     }
 
     if (barcodeSearch.trim()) {
-      const q = normalize(barcodeSearch);
+      const q = normalizeCode(barcodeSearch);
 
       list = list.filter((p) =>
-        normalize(p.barras).includes(q)
+        normalizeCode(p.barras).includes(q)
       );
     }
 
@@ -771,17 +829,18 @@ export function Catalogo2() {
         return codigoA - codigoB;
     });
     }, [
-    produtos,
-    search,
-    sortBy,
-    selectedCategories,
-    selectedCategoryNames,
-    selectedLines,
-    selectedBrands,
-    applicationSearch,
-    codeOriSearch,
-    conversionSearch,
-    barcodeSearch,
+      produtos,
+      search,
+      sortBy,
+      selectedCategories,
+      selectedCategoryNames,
+      selectedLines,
+      selectedBrands,
+      applicationSearch,
+      codeOriSearch,
+      originalSearch,
+      conversionSearch,
+      barcodeSearch,
     ]);
 
     const visibleProducts = filteredList.slice(0, visibleCount);
@@ -1087,6 +1146,14 @@ export function Catalogo2() {
                 placeholder="Código Ori"
                 value={codeOriSearch}
                 onChange={(e) => setCodeOriSearch(e.target.value)}
+              />
+
+              <input
+                type="text"
+                className="catalogo2-filter-input"
+                placeholder="Código original"
+                value={originalSearch}
+                onChange={(e) => setOriginalSearch(e.target.value)}
               />
 
               <input
