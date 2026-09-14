@@ -120,6 +120,25 @@
   color: #64748b;
 }
 
+.minha-conta-cnpj-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.minha-conta-cnpj-row input {
+  flex: 1;
+  min-width: 0;
+}
+
+.minha-conta-cnpj-row button {
+  flex: 0 0 auto;
+  height: 40px;
+  padding: 0 16px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
 /* =========================================================
    Preferências
    ========================================================= */

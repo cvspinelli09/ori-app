@@ -230,7 +230,7 @@ export function Catalogo2() {
   const [catalogCategories, setCatalogCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [sortBy, setSortBy] = useState('codigo');
+  const [sortBy, setSortBy] = useState('marca');
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [selectedLines, setSelectedLines] = useState([]);
   const [selectedBrands, setSelectedBrands] = useState([]);
@@ -302,7 +302,7 @@ export function Catalogo2() {
   setOriginalSearch(filtros.original ?? '');
   setConversionSearch(filtros.conversion ?? '');
   setBarcodeSearch(filtros.barcode ?? '');
-  setSortBy(filtros.sortBy ?? 'codigo');
+  setSortBy(filtros.sortBy ?? 'marca');
 }
 
   // Retomada pós-login: só consome o snapshot pendente aqui em /catalogo, e só quando já

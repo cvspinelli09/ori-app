@@ -37,6 +37,16 @@ function getRegionFromUf(uf) {
   return '';
 }
 
+function formatCnpj(value) {
+  const digits = String(value ?? '').replace(/\D/g, '').slice(0, 14);
+
+  return digits
+    .replace(/^(\d{2})(\d)/, '$1.$2')
+    .replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3')
+    .replace(/\.(\d{3})(\d)/, '.$1/$2')
+    .replace(/(\d{4})(\d)/, '$1-$2');
+}
+
 export function MinhaConta() {
   const navigate = useNavigate();
   const { session, profile, loading: authLoading } = useAuth();
@@ -53,6 +63,8 @@ export function MinhaConta() {
   });
 
   const [saving, setSaving] = useState(false);
+  const [consultingCnpj, setConsultingCnpj] = useState(false);
+  const [cnpjData, setCnpjData] = useState(null);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
@@ -119,17 +131,94 @@ export function MinhaConta() {
   function updateField(field, value) {
     setForm((current) => ({
       ...current,
-      [field]: value,
-    }));
+      [field]:
+        field === 'cnpj'
+          ? formatCnpj(value)
+          : value,
+  }));
 
+  if (field === 'cnpj') {
+      setCnpjData(null);
+  }
+
+  setMessage('');
+  setError('');
+}
+
+  async function handleConsultCnpj() {
+    const cnpj = form.cnpj.replace(/\D/g, '');
+
+    if (cnpj.length !== 14) {
+      setCnpjData(null);
+      setError('Informe um CNPJ com 14 dígitos.');
+      return;
+    }
+
+    setConsultingCnpj(true);
+    setCnpjData(null);
     setMessage('');
     setError('');
+
+    try {
+      const response = await fetch(
+        `https://brasilapi.com.br/api/cnpj/v1/${cnpj}`
+      );
+
+      if (!response.ok) {
+        throw new Error('CNPJ não encontrado.');
+      }
+
+      const data = await response.json();
+
+      setCnpjData(data);
+
+      setForm((current) => ({
+        ...current,
+        empresa:
+          data.razao_social ||
+          data.nome_fantasia ||
+          current.empresa,
+        cidade: data.municipio || current.cidade,
+        uf: data.uf || current.uf,
+      }));
+
+      setMessage('CNPJ localizado e dados cadastrais preenchidos.');
+    } catch (err) {
+      console.error('Erro ao consultar CNPJ:', err);
+      setError(
+        'Não foi possível localizar esse CNPJ. Verifique o número informado.'
+      );
+    } finally {
+      setConsultingCnpj(false);
+    }
   }
 
   async function handleSubmit(event) {
     event.preventDefault();
 
     if (!session?.user?.id) return;
+
+    const email = session.user.email?.trim() || '';
+
+    if (
+      !form.nome.trim() ||
+      !form.telefone.trim() ||
+      !form.empresa.trim() ||
+      !email ||
+      !form.cnpj.trim()
+    ) {
+      setMessage('');
+      setError(
+        'Preencha os campos obrigatórios: nome, telefone, empresa, e-mail e CNPJ.'
+      );
+      return;
+    }
+
+    if (!cnpjData) {
+      setMessage('');
+      setError('Consulte e valide o CNPJ antes de salvar.');
+      return;
+    }
 
     setSaving(true);
     setMessage('');
@@ -224,10 +313,11 @@ export function MinhaConta() {
 
             <div className="minha-conta-grid">
               <label>
-                <span>Nome</span>
+                <span>Nome*</span>
                 <input
                   type="text"
                   value={form.nome}
+                  required
                   onChange={(event) =>
                     updateField(
                       'nome',
@@ -238,7 +328,7 @@ export function MinhaConta() {
               </label>
 
               <label>
-                <span>E-mail</span>
+                <span>E-mail*</span>
                 <input
                   type="email"
                   value={session.user.email || ''}
@@ -247,10 +337,11 @@ export function MinhaConta() {
               </label>
 
               <label>
-                <span>Telefone</span>
+                <span>Telefone*</span>
                 <input
                   type="text"
                   value={form.telefone}
+                  required
                   onChange={(event) =>
                     updateField(
                       'telefone',
@@ -272,10 +363,49 @@ export function MinhaConta() {
 
             <div className="minha-conta-grid">
               <label>
-                <span>Empresa</span>
+                <span>CNPJ *</span>
+
+                <div className="minha-conta-cnpj-row">
+                  <input
+                    type="text"
+                    value={form.cnpj}
+                    required
+                    placeholder="00.000.000/0000-00"
+                    onChange={(event) =>
+                      updateField('cnpj', event.target.value)
+                    }
+                  />
+
+                  <button
+                    type="button"
+                    onClick={handleConsultCnpj}
+                    disabled={consultingCnpj}
+                  >
+                    {consultingCnpj
+                      ? 'Consultando...'
+                      : 'Consultar CNPJ'}
+                  </button>
+                </div>
+
+                {cnpjData && (
+                  <small style={{ marginTop: '6px' }}>
+                    {cnpjData.razao_social}
+                    {cnpjData.nome_fantasia
+                      ? ` — ${cnpjData.nome_fantasia}`
+                      : ''}
+                  </small>
+                )}
+              </label>
+
+              <div />
+
+              <label>
+                <span>Empresa *</span>
                 <input
                   type="text"
                   value={form.empresa}
+                  required
+                  disabled={Boolean(cnpjData)}
                   onChange={(event) =>
                     updateField(
                       'empresa',
@@ -300,24 +430,11 @@ export function MinhaConta() {
               </label>
 
               <label>
-                <span>CNPJ</span>
-                <input
-                  type="text"
-                  value={form.cnpj}
-                  onChange={(event) =>
-                    updateField(
-                      'cnpj',
-                      event.target.value
-                    )
-                  }
-                />
-              </label>
-
-              <label>
                 <span>Cidade</span>
                 <input
                   type="text"
                   value={form.cidade}
+                  disabled={Boolean(cnpjData)}
                   onChange={(event) =>
                     updateField(
                       'cidade',
@@ -332,6 +449,7 @@ export function MinhaConta() {
 
                 <select
                   value={form.uf}
+                  disabled={Boolean(cnpjData)}
                   onChange={(event) =>
                     updateField(
                       'uf',
