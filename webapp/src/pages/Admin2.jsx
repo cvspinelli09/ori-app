@@ -1367,7 +1367,7 @@ function ProductsSection() {
       return true;
     });
 
-    if (!q) return matches.slice(0, 50);
+    if (!q) return matches;
 
     return matches
       .sort((a, b) => {
@@ -1386,7 +1386,6 @@ function ProductsSection() {
 
         return codigoA.localeCompare(codigoB, 'pt-BR', { numeric: true });
       })
-      .slice(0, 50);
   }, [
     produtos,
     search,

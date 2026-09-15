@@ -177,7 +177,7 @@ function getProductTitle(produto) {
   return normalizeProductTitle(titulo);
 }
 
-function formatConversao(value) {
+function formatCodigoOriginal(value) {
   const raw = String(value ?? '').trim();
 
   if (!raw) return 'N/D';
@@ -217,7 +217,7 @@ function ProductCard({ p }) {
         <div className="code">
           Cód. {p.codigo}
           <span className="conv">
-            {' '}• Conv. {formatConversao(p.numero_conversao)}
+            {' '}• Original {formatCodigoOriginal(p.original)}
           </span>
         </div>
 
@@ -389,21 +389,82 @@ export function CatalogoPdf2() {
 
     async function run() {
       let ids = [];
-      try { ids = JSON.parse(localStorage.getItem('ori_catalogo_ids') || '[]'); } catch { /* ignore */ }
+      let selectedBrands = [];
+
+      try {
+        ids = JSON.parse(
+          localStorage.getItem('ori_catalogo_ids') || '[]'
+        );
+      } catch {
+        /* ignore */
+      }
+
+      try {
+        selectedBrands = JSON.parse(
+          localStorage.getItem('ori_catalogo_marcas') || '[]'
+        );
+      } catch {
+        /* ignore */
+      }
 
       // busca o catálogo inteiro e filtra no cliente -- evita mandar uma lista enorme
       // de ids pro Supabase via query string (poderia passar do limite de URL).
-      const { data, error } = await supabase.from('produtos').select('*').eq('ativo', true).limit(5000);
-      if (error) { console.error(error); return; }
+      const { data, error } = await supabase
+        .from('produtos')
+        .select('*')
+        .eq('ativo', true)
+        .limit(5000);
+
+      if (error) {
+        console.error(error);
+        return;
+      }
+
       if (cancelled) return;
 
       const idSet = new Set(ids);
-      const base = ids.length > 0 ? (data ?? []).filter((p) => idSet.has(p.id)) : (data ?? []);
-      const picks = base.slice().sort((a, b) =>
-        (a.marca || '').localeCompare(b.marca || '') ||
-        (a.categoria || '').localeCompare(b.categoria || '') ||
-        parseInt(a.codigo, 10) - parseInt(b.codigo, 10)
-      );
+
+      const base =
+        ids.length > 0
+          ? (data ?? []).filter((p) => idSet.has(p.id))
+          : (data ?? []);
+
+      const uniquePicks = base.slice();
+
+      const picks = base
+        .flatMap((produto) => {
+          const rawBrands =
+            Array.isArray(produto.marcas) && produto.marcas.length
+              ? produto.marcas
+              : produto.marca
+                ? [produto.marca]
+                : ['Outras'];
+
+          const productBrands = [...new Set(rawBrands)];
+
+          const visibleBrands = selectedBrands.length
+            ? productBrands.filter((brand) =>
+                selectedBrands.includes(brand)
+              )
+            : productBrands;
+
+          return visibleBrands.map((brand) => ({
+            ...produto,
+            marca: brand,
+            displayBrand: brand,
+          }));
+        })
+        .sort((a, b) =>
+          (a.displayBrand || '').localeCompare(
+            b.displayBrand || '',
+            'pt-BR'
+          ) ||
+          (a.categoria || '').localeCompare(
+            b.categoria || '',
+            'pt-BR'
+          ) ||
+          parseInt(a.codigo, 10) - parseInt(b.codigo, 10)
+        );
 
       if (document.fonts && document.fonts.ready) {
         try { await document.fonts.ready; } catch { /* ignore */ }
@@ -435,7 +496,7 @@ export function CatalogoPdf2() {
 
       if (!cancelled) {
         setPages({
-          picks,
+          picks: uniquePicks,
           builtPages,
           today: new Date().toLocaleDateString('pt-br'),
           isFullCatalog: ids.length === 0,
@@ -472,7 +533,7 @@ export function CatalogoPdf2() {
                   ? session.user.id
                   : null,
 
-              produtos_selecionados: picks.map((p) => ({
+              produtos_selecionados: uniquePicks.map((p) => ({
                 id: p.id,
                 codigo: p.codigo,
                 descricao: p.descricao,
@@ -708,7 +769,7 @@ function createMeasurer() {
           <div class="suitable">Suitable to</div>
           <div class="code">
             Cód. ${p.codigo}
-            <span class="conv">• Conv. ${formatConversao(p.numero_conversao)}</span>
+            <span class="conv">• Original ${formatCodigoOriginal(p.original)}</span>
           </div>
           <div class="name">${titulo}</div>
           ${aplicacao ? `<div class="app">${aplicacao}</div>` : ''}

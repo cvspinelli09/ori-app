@@ -339,20 +339,25 @@ export function Catalogo2() {
   }
 
   function handleGenerateCatalog() {
-    const catalogIds = filteredList.map((produto) => produto.id);
+  const catalogIds = filteredList.map((produto) => produto.id);
 
-    localStorage.setItem(
-      'ori_catalogo_ids',
-      JSON.stringify(catalogIds)
-    );
+  localStorage.setItem(
+    'ori_catalogo_ids',
+    JSON.stringify(catalogIds)
+  );
 
-    if (!session) {
-      requireLoginThen('generateCatalog');
-      return;
-    }
+  localStorage.setItem(
+    'ori_catalogo_marcas',
+    JSON.stringify(selectedBrands)
+  );
 
-    window.open('/catalogo/pdf', '_blank', 'noopener,noreferrer');
+  if (!session) {
+    requireLoginThen('generateCatalog');
+    return;
   }
+
+  window.open('/catalogo/pdf', '_blank', 'noopener,noreferrer');
+}
 
   async function handleLogout() {
     setUserMenuOpen(false);
