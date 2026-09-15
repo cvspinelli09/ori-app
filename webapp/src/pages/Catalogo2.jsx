@@ -693,7 +693,18 @@ export function Catalogo2() {
     }
 
     if (selectedBrands.length) {
-        list = list.filter((p) => selectedBrands.includes(p.marca));
+      list = list.filter((p) => {
+        const productBrands =
+          Array.isArray(p.marcas) && p.marcas.length
+            ? p.marcas
+            : p.marca
+              ? [p.marca]
+              : [];
+
+        return productBrands.some((brand) =>
+          selectedBrands.includes(brand)
+        );
+      });
     }
 
     if (selectedLines.length) {
@@ -843,19 +854,66 @@ export function Catalogo2() {
       barcodeSearch,
     ]);
 
-    const visibleProducts = filteredList.slice(0, visibleCount);
+    const displayProducts = useMemo(() => {
+      const expanded = filteredList.flatMap((produto) => {
+        const rawBrands =
+          Array.isArray(produto.marcas) && produto.marcas.length
+            ? produto.marcas
+            : produto.marca
+              ? [produto.marca]
+              : [''];
+
+        const productBrands = [...new Set(rawBrands)];
+
+        const visibleBrands = selectedBrands.length
+          ? productBrands.filter((brand) =>
+              selectedBrands.includes(brand)
+            )
+          : productBrands;
+
+        return visibleBrands.map((brand) => ({
+          ...produto,
+          displayBrand: brand,
+        }));
+      });
+
+      if (sortBy === 'marca') {
+        return expanded.sort((a, b) => {
+          const brandCompare = (
+            a.displayBrand || ''
+          ).localeCompare(
+            b.displayBrand || '',
+            'pt-BR',
+            { sensitivity: 'base' }
+          );
+
+          if (brandCompare !== 0) {
+            return brandCompare;
+          }
+
+          const codigoA = parseInt(a.codigo, 10) || 0;
+          const codigoB = parseInt(b.codigo, 10) || 0;
+
+          return codigoA - codigoB;
+        });
+      }
+
+      return expanded;
+    }, [filteredList, selectedBrands, sortBy]);
+
+    const visibleProducts = displayProducts.slice(0, visibleCount);
 
     useEffect(() => {
       const target = loadMoreRef.current;
 
-      if (!target || visibleCount >= filteredList.length) return;
+      if (!target || visibleCount >= displayProducts.length) return;
 
       const observer = new IntersectionObserver(
         ([entry]) => {
           if (!entry.isIntersecting) return;
 
           setVisibleCount((current) =>
-            Math.min(current + 80, filteredList.length)
+            Math.min(current + 80, displayProducts.length)
           );
         },
         {
@@ -868,7 +926,7 @@ export function Catalogo2() {
       observer.observe(target);
 
       return () => observer.disconnect();
-    }, [visibleCount, filteredList.length]);
+    }, [visibleCount, displayProducts.length]);
 
     const filterOptions = useMemo(() => {
       const categories = new Set();
@@ -1246,7 +1304,7 @@ export function Catalogo2() {
               visibleProducts.map((p) => (
                 <article
                     className="catalogo2-card"
-                    key={p.id}
+                    key={`${p.id}-${p.displayBrand || p.marca || 'sem-marca'}`}
                     onClick={() => {
                         setDetailProduct(p);
                         setActivePhoto(
@@ -1274,7 +1332,7 @@ export function Catalogo2() {
 
                     <div className="catalogo2-card-body">
                         <div className="catalogo2-card-brand">
-                        {p.marca || '—'}
+                          {p.displayBrand || p.marca || '—'}
                         </div>
 
                         <p className="catalogo2-card-description">
@@ -1359,7 +1417,7 @@ export function Catalogo2() {
 
         <div className="catalogo2-detail-info">
           <div className="catalogo2-detail-brand">
-            {detailProduct.marca || '—'}
+            {detailProduct.displayBrand || detailProduct.marca || '—'}
           </div>
 
           <h2>{detailProduct.descricao}</h2>

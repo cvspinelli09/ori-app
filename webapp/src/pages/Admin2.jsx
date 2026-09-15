@@ -146,7 +146,13 @@ function Admin2ProductEditModal({
   const [numeroConversao, setNumeroConversao] = useState(
     produto.numero_conversao ?? ''
   );
-  const [marca, setMarca] = useState(produto.marca ?? '');
+  const [marcasSelecionadas, setMarcasSelecionadas] = useState(
+    Array.isArray(produto.marcas) && produto.marcas.length
+      ? produto.marcas
+      : produto.marca
+        ? [produto.marca]
+        : []
+  );
   const [categoria, setCategoria] = useState(produto.categoria ?? '');
   const [descricao, setDescricao] = useState(produto.descricao ?? '');
   const [pesoLiquido, setPesoLiquido] = useState(produto.peso_liquido ?? '');
@@ -221,6 +227,14 @@ function Admin2ProductEditModal({
       current.includes(line)
         ? current.filter((item) => item !== line)
         : [...current, line]
+    );
+  }
+
+  function toggleMarca(marca) {
+    setMarcasSelecionadas((current) =>
+      current.includes(marca)
+        ? current.filter((item) => item !== marca)
+        : [...current, marca]
     );
   }
 
@@ -451,7 +465,7 @@ function Admin2ProductEditModal({
 
     if (
       !codigo.trim() ||
-      !marca.trim() ||
+      marcasSelecionadas.length === 0 ||
       !categoria.trim() ||
       !descricao.trim()
     ) {
@@ -532,7 +546,8 @@ function Admin2ProductEditModal({
         original: original.trim() || null,
         numero_conversao:
           numeroConversao.trim() || null,
-        marca: marca.trim(),
+        marca: marcasSelecionadas[0],
+        marcas: marcasSelecionadas,
         categoria: categoria.trim(),
         descricao: descricao.trim(),
         peso_liquido:
@@ -760,19 +775,41 @@ function Admin2ProductEditModal({
               <div className="admin2-form-grid admin2-form-grid-3">
                 <div className="admin2-field">
                   <label>Marca *</label>
-                  <select
-                    value={marca}
-                    onChange={(event) => setMarca(event.target.value)}
-                    required
-                  >
-                    <option value="">Selecione uma marca...</option>
 
-                    {marcas.map((item) => (
-                      <option key={item} value={item}>
-                        {item}
-                      </option>
-                    ))}
-                  </select>
+                  <details className="admin2-brand-multiselect">
+                    <summary>
+                      <span
+                        className={
+                          marcasSelecionadas.length
+                            ? 'admin2-brand-summary-selected'
+                            : 'admin2-brand-summary-placeholder'
+                        }
+                      >
+                        {marcasSelecionadas.length
+                          ? marcasSelecionadas.join(', ')
+                          : 'Selecione uma ou mais marcas...'}
+                      </span>
+
+                      <span className="admin2-brand-summary-arrow" />
+                    </summary>
+
+                    <div className="admin2-brand-dropdown">
+                      {marcas.map((item) => (
+                        <label
+                          key={item}
+                          className="admin2-brand-option"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={marcasSelecionadas.includes(item)}
+                            onChange={() => toggleMarca(item)}
+                          />
+
+                          <span>{item}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </details>
                 </div>
 
                 <div className="admin2-field">
@@ -1155,7 +1192,7 @@ function ProductsSection() {
         supabase
           .from('produtos')
           .select(
-            'id, codigo, descricao, marca, categoria, linha, original, numero_conversao, aplicacoes, peso_liquido, barras, galeria, ativo, foto_local, foto_local_gde, updated_at, updated_by'
+            'id, codigo, descricao, marca, marcas, categoria, linha, original, numero_conversao, aplicacoes, peso_liquido, barras, galeria, ativo, foto_local, foto_local_gde, updated_at, updated_by'
           )
           .order('codigo')
           .limit(4000),
@@ -1588,7 +1625,11 @@ return (
                       )}
                     </td>
 
-                    <td>{produto.marca || '—'}</td>
+                    <td>
+                      {Array.isArray(produto.marcas) && produto.marcas.length
+                        ? produto.marcas.join(', ')
+                        : produto.marca || '—'}
+                    </td>
                     <td>{produto.categoria || '—'}</td>
                     <td>{produto.linha || '—'}</td>
 
