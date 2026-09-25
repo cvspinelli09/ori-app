@@ -6,8 +6,6 @@ import { LeadsSection } from '../components/admin2/LeadsSection';
 import { OverviewSection } from '../components/admin2/OverviewSection';
 import '../styles/admin2.css';
 
-const ADMIN2_LINES = ['Leve', 'Van', 'Pesada'];
-
 const ADMIN2_MAX_HIGHLIGHT_CATEGORIES = 5;
 const ADMIN2_MAX_HIGHLIGHT_PRODUCTS = 3;
 
@@ -80,6 +78,7 @@ const NAV_ITEMS = [
   { section: 'PRODUTOS' },
   { key: 'products', label: 'Produtos' },
   { key: 'categories', label: 'Categorias' },
+  { key: 'lines', label: 'Linhas' },
 
   { section: 'CONTEÚDO' },
   { key: 'highlights', label: 'Destaques' },
@@ -104,6 +103,10 @@ const SECTION_META = {
   categories: {
     title: 'Categorias',
     subtitle: 'Organize a estrutura de categorias do catálogo.',
+  },
+  lines: {
+    title: 'Linhas',
+    subtitle: 'Gerencie as linhas de produtos utilizadas no catálogo.',
   },
   highlights: {
     title: 'Destaques',
@@ -136,6 +139,7 @@ function Admin2ProductEditModal({
   produto,
   marcas,
   categorias,
+  linhasDisponiveis,
   session,
   onClose,
   onSaved,
@@ -158,14 +162,48 @@ function Admin2ProductEditModal({
   const [pesoLiquido, setPesoLiquido] = useState(produto.peso_liquido ?? '');
   const [barras, setBarras] = useState(produto.barras ?? '');
 
-  const [linhas, setLinhas] = useState(
-    produto.linha
-      ? produto.linha
-          .split(',')
-          .map((item) => item.trim())
-          .filter(Boolean)
-      : []
-  );
+  const normalizeLineName = (value) =>
+    String(value ?? '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim()
+      .toLocaleLowerCase('pt-BR');
+
+  const [linhas, setLinhas] = useState(() => {
+    if (!produto.linha) return [];
+
+    return produto.linha
+      .split(',')
+      .map((item) => item.trim())
+      .filter(Boolean)
+      .map((item) => {
+        const canonical = (linhasDisponiveis ?? []).find(
+          (line) =>
+            normalizeLineName(line) === normalizeLineName(item)
+        );
+
+        return canonical ?? item;
+      });
+  });
+
+  const linhasExibidas = useMemo(() => {
+    const result = [];
+    const seen = new Set();
+
+    for (const line of [
+      ...(linhasDisponiveis ?? []),
+      ...linhas,
+    ]) {
+      const key = normalizeLineName(line);
+
+      if (!key || seen.has(key)) continue;
+
+      seen.add(key);
+      result.push(line);
+    }
+
+    return result;
+  }, [linhasDisponiveis, linhas]);
 
   const [aplicacoes, setAplicacoes] = useState(
     Array.isArray(produto.aplicacoes) && produto.aplicacoes.length
@@ -983,7 +1021,7 @@ function Admin2ProductEditModal({
                 <label>Linha(s)</label>
 
                 <div className="admin2-line-options">
-                  {ADMIN2_LINES.map((line) => (
+                  {linhasExibidas.map((line) => (
                     <label key={line}>
                       <input
                         type="checkbox"
@@ -1173,6 +1211,7 @@ function ProductsSection() {
 
   const [produtos, setProdutos] = useState([]);
   const [catalogCategories, setCatalogCategories] = useState([]);
+  const [catalogLines, setCatalogLines] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingProduct, setEditingProduct] = useState(null);
 
@@ -1188,7 +1227,7 @@ function ProductsSection() {
     async function loadProducts() {
       setLoading(true);
 
-      const [productsResult, categoriesResult] = await Promise.all([
+      const [productsResult, categoriesResult, linesResult] = await Promise.all([
         supabase
           .from('produtos')
           .select(
@@ -1202,7 +1241,14 @@ function ProductsSection() {
           .select('id, nome, parent_id, ordem, ativo')
           .order('ordem', { ascending: true })
           .order('nome', { ascending: true }),
-      ]);
+
+        supabase
+          .from('catalogo_linhas')
+          .select('id, nome, ordem, ativo')
+          .eq('ativo', true)
+          .order('ordem', { ascending: true })
+          .order('nome', { ascending: true }),
+        ]);
 
       if (!cancelled) {
         if (productsResult.error) {
@@ -1220,6 +1266,16 @@ function ProductsSection() {
           setCatalogCategories([]);
         } else {
           setCatalogCategories(categoriesResult.data ?? []);
+        }
+
+        if (linesResult.error) {
+          console.error(
+            'Erro ao carregar linhas:',
+            linesResult.error
+          );
+          setCatalogLines([]);
+        } else {
+          setCatalogLines(linesResult.data ?? []);
         }
 
         setLoading(false);
@@ -1678,6 +1734,7 @@ return (
           produto={editingProduct}
           marcas={brands}
           categorias={categories}
+          linhasDisponiveis={catalogLines.map((item) => item.nome)}
           session={session}
           onClose={() => setEditingProduct(null)}
           onSaved={(savedProduct) => {
@@ -1700,6 +1757,294 @@ return (
             setEditingProduct(null);
           }}
         />
+      )}
+    </section>
+  );
+}
+
+function LinesSection() {
+  const [linhas, setLinhas] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [newName, setNewName] = useState('');
+  const [newOrder, setNewOrder] = useState(50);
+  const [saving, setSaving] = useState(false);
+
+  async function loadLinhas() {
+    setLoading(true);
+    setError('');
+
+    const { data, error: loadError } = await supabase
+      .from('catalogo_linhas')
+      .select('id, nome, ordem, ativo, banner_url')
+      .order('ordem', { ascending: true })
+      .order('nome', { ascending: true });
+
+    if (loadError) {
+      console.error(loadError);
+      setError('Não foi possível carregar as linhas.');
+      setLinhas([]);
+    } else {
+      setLinhas(data ?? []);
+    }
+
+    setLoading(false);
+  }
+
+  useEffect(() => {
+    loadLinhas();
+  }, []);
+
+  async function handleCreate(event) {
+    event.preventDefault();
+
+    const nome = newName.trim();
+
+    if (!nome) {
+      setError('Informe o nome da linha.');
+      return;
+    }
+
+    setSaving(true);
+    setError('');
+
+    const { error: insertError } = await supabase
+      .from('catalogo_linhas')
+      .insert({
+        nome,
+        ordem:
+          linhas.length > 0
+            ? Math.max(...linhas.map((item) => Number(item.ordem) || 0)) + 10
+            : 10,
+        ativo: true,
+      });
+
+    setSaving(false);
+
+    if (insertError) {
+      console.error(insertError);
+
+      if (insertError.code === '23505') {
+        setError('Já existe uma linha com esse nome.');
+      } else {
+        setError('Não foi possível criar a linha.');
+      }
+
+      return;
+    }
+
+    setNewName('');
+    await loadLinhas();
+  }
+
+  async function handleToggleActive(linha) {
+    const { error: updateError } = await supabase
+      .from('catalogo_linhas')
+      .update({
+        ativo: !linha.ativo,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', linha.id);
+
+    if (updateError) {
+      console.error(updateError);
+      setError('Não foi possível alterar o status da linha.');
+      return;
+    }
+
+    setLinhas((current) =>
+      current.map((item) =>
+        item.id === linha.id
+          ? { ...item, ativo: !item.ativo }
+          : item
+      )
+    );
+  }
+
+  async function handleMoveLine(index, direction) {
+  const targetIndex = index + direction;
+
+  if (targetIndex < 0 || targetIndex >= linhas.length) return;
+
+  const currentLine = linhas[index];
+  const targetLine = linhas[targetIndex];
+
+  const currentOrder = currentLine.ordem;
+  const targetOrder = targetLine.ordem;
+
+  const [
+    { error: currentError },
+    { error: targetError },
+  ] = await Promise.all([
+    supabase
+      .from('catalogo_linhas')
+      .update({
+        ordem: targetOrder,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', currentLine.id),
+
+    supabase
+      .from('catalogo_linhas')
+      .update({
+        ordem: currentOrder,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', targetLine.id),
+  ]);
+
+  if (currentError || targetError) {
+    console.error(currentError || targetError);
+    setError('Não foi possível alterar a ordem das linhas.');
+    await loadLinhas();
+    return;
+  }
+
+  const reordered = [...linhas];
+
+  reordered[index] = {
+    ...targetLine,
+    ordem: currentOrder,
+  };
+
+  reordered[targetIndex] = {
+    ...currentLine,
+    ordem: targetOrder,
+  };
+
+  setLinhas(reordered);
+}
+
+  return (
+    <section className="admin2-categories">
+      <div className="admin2-section-heading">
+        <div>
+          <h2>Linhas</h2>
+          <p>
+            Gerencie as linhas utilizadas no catálogo de produtos.
+          </p>
+        </div>
+
+        <div className="admin2-categories-summary">
+          {linhas.length} linha{linhas.length === 1 ? '' : 's'}
+        </div>
+      </div>
+
+      <form
+        onSubmit={handleCreate}
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'minmax(220px, 1fr) auto',
+          gap: '12px',
+          alignItems: 'end',
+          marginBottom: '20px',
+        }}
+      >
+        <label className="admin2-field">
+          <span>Nova linha</span>
+          <input
+            type="text"
+            value={newName}
+            placeholder="Ex.: Agrícola"
+            onChange={(event) => setNewName(event.target.value)}
+          />
+        </label>
+
+        <button
+          type="submit"
+          className="admin2-primary-button"
+          disabled={saving}
+        >
+          {saving ? 'Salvando...' : '+ Nova linha'}
+        </button>
+      </form>
+
+      {error && (
+        <div className="admin2-empty-state admin2-empty-state-error">
+          {error}
+        </div>
+      )}
+
+      {loading ? (
+        <div className="admin2-empty-state">
+          Carregando linhas...
+        </div>
+      ) : (
+        <div className="admin2-categories-table">
+          <div
+            className="admin2-categories-row admin2-categories-row-head"
+            style={{
+              gridTemplateColumns: '1fr 140px 200px',
+            }}
+          >
+            <div>Linha</div>
+            <div>Status</div>
+            <div>Ações</div>
+          </div>
+
+          {linhas.map((linha, index) => (
+            <div
+              key={linha.id}
+              className="admin2-categories-row"
+              style={{
+                gridTemplateColumns: '1fr 140px 200px',              }}
+            >
+              <div className="admin2-category-name">
+                {linha.nome}
+              </div>
+
+              <div>
+                <span
+                  className={
+                    linha.ativo
+                      ? 'admin2-status admin2-status-active'
+                      : 'admin2-status admin2-status-inactive'
+                  }
+                >
+                  {linha.ativo ? 'Ativa' : 'Inativa'}
+                </span>
+              </div>
+
+              <div>
+                <div
+                  style={{
+                    display: 'flex',
+                    gap: '6px',
+                    alignItems: 'center',
+                  }}
+                >
+                  <button
+                    type="button"
+                    className="admin2-secondary-button"
+                    onClick={() => handleMoveLine(index, -1)}
+                    disabled={index === 0}
+                    title="Mover para cima"
+                  >
+                    ↑
+                  </button>
+
+                  <button
+                    type="button"
+                    className="admin2-secondary-button"
+                    onClick={() => handleMoveLine(index, 1)}
+                    disabled={index === linhas.length - 1}
+                    title="Mover para baixo"
+                  >
+                    ↓
+                  </button>
+
+                  <button
+                    type="button"
+                    className="admin2-secondary-button"
+                    onClick={() => handleToggleActive(linha)}
+                  >
+                    {linha.ativo ? 'Desativar' : 'Ativar'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       )}
     </section>
   );
@@ -3966,6 +4311,8 @@ export function Admin2() {
 
           {activeSection === 'categories' && <CategoriesSection />}
 
+          {activeSection === 'lines' && <LinesSection />}
+
           {activeSection === 'highlights' && <HighlightsSection />}
 
           {activeSection === 'banners' && <BannersSection />}
@@ -3981,6 +4328,7 @@ export function Admin2() {
           {activeSection !== 'overview' &&
             activeSection !== 'products' &&
             activeSection !== 'categories' &&
+            activeSection !== 'lines' &&
             activeSection !== 'highlights' &&
             activeSection !== 'banners' &&
             activeSection !== 'instagram' &&

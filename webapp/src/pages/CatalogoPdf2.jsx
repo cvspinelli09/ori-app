@@ -82,9 +82,9 @@ function linhaHeaderClass(linha) {
   if (key === 'leve') return 'linha-leve';
   if (key === 'van') return 'linha-van';
   if (key === 'pesada') return 'linha-pesada';
+  if (key === 'agrícola' || key === 'agricola') return 'linha-agricola';
   return '';
 }
-
 function linhaBannerSrc(linha) {
   const key = String(linha || '').trim().toLowerCase();
 
@@ -94,6 +94,10 @@ function linhaBannerSrc(linha) {
 
   if (key === 'pesada') {
     return '/assets/catalogo/linhas/linha-pesada.png';
+  }
+
+  if (key === 'agrícola' || key === 'agricola') {
+    return '/assets/catalogo/linhas/linha-agricola.png';
   }
 
   return '/assets/catalogo/linhas/linha-leve.png';
