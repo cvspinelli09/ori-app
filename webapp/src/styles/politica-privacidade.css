@@ -1,0 +1,125 @@
+.privacy-page {
+  min-height: 100vh;
+  background: #f4f7fa;
+  padding: 64px 24px 80px;
+  color: #263942;
+}
+
+.privacy-container {
+  width: 100%;
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 48px 56px 56px;
+  background: #ffffff;
+  border: 1px solid #dce4eb;
+  border-radius: 12px;
+  box-shadow: 0 8px 30px rgba(7, 27, 60, 0.06);
+}
+
+.privacy-back {
+  display: inline-block;
+  margin-bottom: 22px;
+  color: #0b5fa5;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: opacity 0.2s ease;
+}
+
+.privacy-back:hover {
+  opacity: 0.7;
+  text-decoration: underline;
+}
+
+.privacy-container h1 {
+  margin: 0 0 8px;
+  color: #071b3c;
+  font-size: 34px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.privacy-updated {
+  margin: 0 0 36px !important;
+  color: #71808d !important;
+  font-size: 13px !important;
+}
+
+.privacy-container h2 {
+  margin: 34px 0 12px;
+  color: #071b3c;
+  font-size: 19px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.privacy-container p {
+  margin: 0 0 16px;
+  color: #4b5965;
+  font-size: 15px;
+  line-height: 1.75;
+}
+
+.privacy-container strong {
+  color: #263942;
+}
+
+.privacy-container ul {
+  margin: 4px 0 20px;
+  padding-left: 22px;
+}
+
+.privacy-container li {
+  margin-bottom: 8px;
+  color: #4b5965;
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+.privacy-contact {
+  margin-top: 16px;
+  padding: 20px 22px;
+  background: #f7f9fb;
+  border-left: 4px solid #071b3c;
+  border-radius: 6px;
+  color: #4b5965;
+  font-size: 15px;
+  font-style: normal;
+  line-height: 1.75;
+}
+
+.privacy-contact a {
+  color: #0b5fa5;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.privacy-contact a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+  .privacy-page {
+    padding: 32px 16px 48px;
+  }
+
+  .privacy-container {
+    padding: 30px 22px 36px;
+    border-radius: 10px;
+  }
+
+  .privacy-container h1 {
+    font-size: 27px;
+  }
+
+  .privacy-container h2 {
+    margin-top: 28px;
+    font-size: 18px;
+  }
+
+  .privacy-container p,
+  .privacy-container li,
+  .privacy-contact {
+    font-size: 14px;
+  }
+}

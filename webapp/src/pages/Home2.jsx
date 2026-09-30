@@ -905,6 +905,7 @@ export function Home2() {
                   src="https://www.google.com/maps?q=Rua+Reverendo+Isaac+Silv%C3%A9rio+365,+Ermelino+Matarazzo,+S%C3%A3o+Paulo,+SP&output=embed"
                   loading="lazy"
                   allowFullScreen
+                  referrerPolicy="strict-origin-when-cross-origin"
                   title="Mapa Ori"
                   style={{ width: '100%', height: '348px', border: 0 }}
                 />
@@ -1025,6 +1026,7 @@ export function Home2() {
 
             <a href="#contato">Fale conosco</a>
             <a href="#contato">Central de atendimento</a>
+            <Link to="/politica-de-privacidade">Política de Privacidade</Link>
           </div>
 
           <div className="home2-footer-column home2-footer-contact">

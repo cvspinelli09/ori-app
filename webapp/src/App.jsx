@@ -7,11 +7,16 @@ import { Admin2 } from './pages/Admin2';
 import { VendedorDashboard } from './pages/VendedorDashboard';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { MinhaConta } from './pages/MinhaConta';
+import PoliticaPrivacidade from './pages/PoliticaPrivacidade';
 
 function App() {
   return (
     <Routes>
     <Route path="/" element={<Home2 />} />
+    <Route
+      path="/politica-de-privacidade"
+      element={<PoliticaPrivacidade />}
+    />
     <Route path="/login" element={<Login />} />
     <Route path="/catalogo" element={<Catalogo2 />} />
     <Route path="/catalogo/pdf" element={<CatalogoPdf2 />} />
