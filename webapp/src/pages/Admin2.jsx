@@ -33,7 +33,7 @@ async function uploadAdmin2ProductPhoto(session, file) {
   formData.append('file', file);
   formData.append('folder', 'produtos');
 
-  const response = await fetch(`${import.meta.env.VITE_API_URL}/upload`, {
+  const response = await fetch(`${import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/upload` : '/api/upload'}`, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${session.access_token}`,
@@ -55,7 +55,7 @@ async function uploadAdmin2ContentImage(session, file, folder) {
   formData.append('file', file);
   formData.append('folder', folder);
 
-  const response = await fetch(`${import.meta.env.VITE_API_URL}/upload`, {
+  const response = await fetch(`${import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/upload` : '/api/upload'}`, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${session.access_token}`,
@@ -4345,3 +4345,4 @@ export function Admin2() {
     </div>
   );
 }
+

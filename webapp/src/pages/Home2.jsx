@@ -504,7 +504,7 @@ export function Home2() {
     setContactSending(true);
 
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/contact`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/contact` : '/api/contact'}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
