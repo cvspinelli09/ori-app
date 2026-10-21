@@ -1852,6 +1852,264 @@ body {
 }
 
 /* =========================
+   ADMIN2 — FAMÍLIAS
+   ========================= */
+
+.admin2-families {
+  width: 100%;
+}
+
+.admin2-families-table-wrap {
+  overflow-x: auto;
+}
+
+.admin2-families-table {
+  width: 100%;
+  min-width: 1060px;
+  border-collapse: collapse;
+  color: #314256;
+  font-size: 13px;
+}
+
+.admin2-families-table th,
+.admin2-families-table td {
+  padding: 11px 14px;
+  border-bottom: 1px solid #edf1f5;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.admin2-families-table th {
+  background: #f7f9fb;
+  color: #778493;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.admin2-families-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.admin2-families-table tbody tr:hover {
+  background: #fafcff;
+}
+
+.admin2-families-table td > strong,
+.admin2-families-table td > small {
+  display: block;
+}
+
+.admin2-families-table td > strong {
+  color: #172b42;
+}
+
+.admin2-families-table td > small {
+  margin-top: 3px;
+  color: #758493;
+}
+
+.admin2-family-cover,
+.admin2-family-page-image {
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: #f3f6f9;
+  color: #8492a1;
+}
+
+.admin2-family-cover {
+  width: 78px;
+  height: 52px;
+  border: 1px solid #e1e7ed;
+  border-radius: 7px;
+  font-size: 10px;
+}
+
+.admin2-family-cover img,
+.admin2-family-page-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.admin2-family-lines {
+  max-width: 185px;
+  line-height: 1.45;
+}
+
+.admin2-family-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.admin2-family-modal {
+  width: min(940px, calc(100vw - 48px));
+  max-height: calc(100vh - 48px);
+  overflow: hidden;
+  border: 1px solid #dbe3eb;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 20px 60px rgba(15, 39, 68, 0.2);
+}
+
+.admin2-family-modal form {
+  display: flex;
+  max-height: calc(100vh - 48px - 97px);
+  flex-direction: column;
+}
+
+.admin2-family-modal-body {
+  display: grid;
+  gap: 18px;
+  overflow-y: auto;
+  padding: 22px 24px;
+}
+
+.admin2-family-fields {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.admin2-family-line-picker {
+  margin: 0;
+  padding: 14px;
+  border: 1px solid #e1e7ed;
+  border-radius: 9px;
+}
+
+.admin2-family-line-picker legend {
+  padding: 0 5px;
+  color: #33465a;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.admin2-family-line-picker > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px 16px;
+}
+
+.admin2-family-line-picker label,
+.admin2-family-page-active {
+  color: #526477;
+  font-size: 13px;
+}
+
+.admin2-family-pages {
+  display: grid;
+  gap: 10px;
+}
+
+.admin2-family-pages-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.admin2-family-pages-heading h3 {
+  margin: 0 0 3px;
+  color: #33465a;
+  font-size: 14px;
+}
+
+.admin2-family-pages-heading p {
+  margin: 0;
+  color: #758493;
+  font-size: 12px;
+}
+
+.admin2-family-page {
+  display: grid;
+  grid-template-columns: 130px minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid #e1e7ed;
+  border-radius: 10px;
+  background: #fafbfd;
+}
+
+.admin2-family-page-image {
+  width: 130px;
+  height: 88px;
+  border-radius: 7px;
+  font-size: 11px;
+}
+
+.admin2-family-page-fields {
+  display: grid;
+  gap: 8px;
+}
+
+.admin2-family-page-fields > strong {
+  color: #33465a;
+  font-size: 13px;
+}
+
+.admin2-family-upload {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  min-height: 34px;
+  padding: 0 11px;
+  border: 1px solid #d4dde6;
+  border-radius: 8px;
+  background: #fff;
+  color: #405267;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.admin2-family-upload input {
+  display: none;
+}
+
+.admin2-family-page-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+@media (max-width: 720px) {
+  .admin2-family-modal {
+    width: 100%;
+    max-height: 100vh;
+    border-radius: 0;
+  }
+
+  .admin2-family-modal form {
+    max-height: calc(100vh - 97px);
+  }
+
+  .admin2-family-fields {
+    grid-template-columns: 1fr;
+  }
+
+  .admin2-family-page {
+    grid-template-columns: 92px minmax(0, 1fr);
+  }
+
+  .admin2-family-page-image {
+    width: 92px;
+    height: 72px;
+  }
+
+  .admin2-family-page-actions {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    justify-content: flex-end;
+  }
+}
+
+/* =========================
    ADMIN2 — BANNERS
    ========================= */
 
@@ -3019,4 +3277,154 @@ body {
 .admin2-multi-select-option:has(input:checked) {
   border-color: #2f6db5;
   background: #edf4fb;
+}
+
+/* Admin Famílias: seleção de marca e vínculos por ID textual. */
+.admin2-family-edit-fields { border: 0; margin: 0; padding: 0; min-width: 0; }
+.admin2-family-brand-picker { margin-bottom: 18px; }
+.admin2-family-brand-picker label { display: grid; gap: 6px; margin-bottom: 8px; }
+.admin2-family-brand-picker select { width: 100%; padding: 10px; border: 1px solid #d7dce3; border-radius: 7px; background: white; }
+.admin2-family-products { min-width: 0; margin: 20px 0; padding: 16px; border: 1px solid #d7dce3; border-radius: 8px; }
+.admin2-family-product-list { list-style: none; padding: 0; margin: 12px 0; max-height: 340px; overflow-y: auto; }
+.admin2-family-product-list li { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 1px solid #e5e9ef; }
+.admin2-family-product-list li > div { min-width: 0; overflow-wrap: anywhere; }
+.admin2-family-product-list strong, .admin2-family-product-list small { display: block; }
+.admin2-family-product-list small { margin-top: 5px; color: #526174; }
+.admin2-family-products button { flex-shrink: 0; padding: 7px 10px; cursor: pointer; }
+.admin2-family-products button:disabled { cursor: default; opacity: .55; }
+.admin2-family-product-pagination { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+@media (max-width: 600px) {
+  .admin2-family-product-list li { align-items: flex-start; flex-direction: column; }
+}
+/* Combobox de Marca: digitação filtra; somente uma opção confirma a seleção. */
+.admin2-family-brand-picker { position: relative; }
+.admin2-family-brand-options { position: absolute; z-index: 40; top: 66px; left: 0; right: 0; max-height: 240px; overflow-y: auto; list-style: none; margin: 0; padding: 5px; border: 1px solid #cbd3de; border-radius: 7px; background: #fff; box-shadow: 0 8px 20px #17203326; }
+.admin2-family-brand-options li { padding: 10px; border-radius: 4px; cursor: pointer; overflow-wrap: anywhere; }
+.admin2-family-brand-options li:hover, .admin2-family-brand-options li.is-active { background: #edf4fb; }
+.admin2-family-brand-options li[aria-selected='true'] { font-weight: 600; }
+.admin2-family-brand-options li[aria-disabled='true'] { opacity: .55; cursor: default; }
+.admin2-family-brand-picker input[aria-invalid='true'] { border-color: #b45309; }
+/* Modal de Famílias compacto, com uma área rolável e rodapé fixo. */
+.admin2-family-modal {
+  display: flex;
+  flex-direction: column;
+  width: min(1040px, calc(100vw - 40px));
+  max-height: calc(100dvh - 40px);
+}
+.admin2-family-modal > .admin2-category-modal-header { flex-shrink: 0; padding: 14px 20px; }
+.admin2-family-modal > .admin2-category-modal-header p { margin-top: 3px; }
+.admin2-family-modal form { min-height: 0; max-height: none; overflow: hidden; }
+.admin2-family-modal-body { min-height: 0; gap: 10px; padding: 14px 20px; overflow-y: auto; }
+.admin2-family-modal .admin2-category-modal-footer { flex-shrink: 0; padding: 12px 20px; }
+.admin2-family-edit-fields { display: grid; gap: 10px; }
+.admin2-family-fields { gap: 12px; align-items: start; }
+.admin2-family-fields .admin2-field { margin: 0; }
+.admin2-family-fields .admin2-field > span,
+.admin2-family-fields .admin2-field > label { margin-bottom: 5px; }
+.admin2-family-fields input:not([type='checkbox']) { min-height: 38px; box-sizing: border-box; }
+.admin2-family-modal .admin2-family-brand-picker { margin: 0; gap: 0; }
+.admin2-family-brand-picker > div[aria-live] { font-size: 11px; line-height: 1.35; padding-top: 3px; }
+.admin2-family-brand-options { top: 62px; max-height: min(220px, 35dvh); }
+.admin2-family-fields-secondary { align-items: end; }
+.admin2-family-modal .admin2-family-status { min-height: 38px; margin: 0; padding: 7px 10px; box-sizing: border-box; }
+.admin2-family-line-picker { padding: 7px 10px 9px; }
+.admin2-family-line-picker > div { gap: 5px 16px; }
+.admin2-family-line-picker label { display: inline-flex; align-items: center; gap: 5px; min-height: 24px; }
+.admin2-family-products { margin: 0; padding: 8px 12px; }
+.admin2-family-products > p { margin: 6px 0; font-size: 12px; }
+.admin2-family-products > small { display: block; margin: 3px 0; font-size: 11px; }
+.admin2-family-products > .admin2-field { margin: 0; }
+.admin2-family-product-list { max-height: none; overflow: visible; margin: 5px 0; }
+.admin2-family-product-list:empty { display: none; }
+.admin2-family-product-list li { padding: 7px 0; gap: 10px; }
+.admin2-family-product-list small { margin-top: 2px; font-size: 12px; }
+.admin2-family-products legend { font-size: 13px; font-weight: 700; color: #33465a; padding: 0 5px; }
+.admin2-family-pages { gap: 6px; }
+.admin2-family-pages-heading { gap: 10px; }
+.admin2-family-pages-heading h3 { margin: 0; }
+.admin2-family-page { grid-template-columns: 110px minmax(0, 1fr) auto; gap: 10px; padding: 9px; }
+.admin2-family-page-image { width: 110px; height: 80px; }
+.admin2-family-page-fields { grid-template-columns: minmax(0, 1fr) auto; gap: 5px 12px; align-items: center; }
+.admin2-family-page-fields > strong,
+.admin2-family-page-fields > .admin2-field { grid-column: 1 / -1; }
+.admin2-family-page-fields > .admin2-field { margin: 0; }
+.admin2-family-page-active { white-space: nowrap; }
+@media (max-width: 720px) {
+  .admin2-family-modal { width: 100%; max-height: 100dvh; }
+  .admin2-family-modal-body { padding: 12px; }
+  .admin2-family-fields { grid-template-columns: 1fr; gap: 9px; }
+  .admin2-family-fields-secondary { grid-template-columns: minmax(0, 1fr) minmax(80px, .65fr); }
+  .admin2-family-status { grid-column: 1 / -1; }
+  .admin2-family-page { grid-template-columns: 80px minmax(0, 1fr); }
+  .admin2-family-page-image { width: 80px; height: 72px; }
+  .admin2-family-page-fields { grid-template-columns: minmax(0, 1fr); }
+  .admin2-family-page-fields > * { grid-column: 1; }
+}
+/* Alinhamento dos controles e indicação discreta do seletor de Marca. */
+.admin2-family-fields-primary > .admin2-field,
+.admin2-family-fields-secondary > .admin2-field {
+  display: grid;
+  grid-template-rows: 18px 38px auto;
+  gap: 5px;
+  align-content: start;
+}
+.admin2-family-fields > .admin2-field > span,
+.admin2-family-fields > .admin2-field > label {
+  margin: 0;
+  line-height: 18px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.admin2-family-fields input:not([type='checkbox']) { height: 38px; min-height: 38px; width: 100%; }
+.admin2-family-brand-control { position: relative; height: 38px; }
+.admin2-family-brand-control input { padding-right: 38px; }
+.admin2-family-brand-chevron {
+  position: absolute; right: 1px; top: 1px; bottom: 1px; width: 36px;
+  display: grid; place-items: center; padding: 0; border: 0;
+  border-radius: 0 7px 7px 0; background: transparent; color: #526477; cursor: pointer;
+}
+.admin2-family-brand-chevron:focus-visible { outline: 2px solid #2f6db5; outline-offset: -3px; }
+.admin2-family-brand-chevron:disabled { cursor: default; opacity: .55; }
+.admin2-family-brand-picker > div[aria-live]:empty { display: none; }
+.admin2-family-brand-options { top: 61px; }
+/* Tipografia compacta apenas nas listas de Produtos relacionados. */
+.admin2-family-products .admin2-family-product-list li {
+  padding: 5px 0;
+  gap: 8px;
+  border-bottom: 1px solid #e5e9ef;
+}
+.admin2-family-products .admin2-family-product-list li > div > strong {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: #33465a;
+}
+.admin2-family-products .admin2-family-product-list li > div > small {
+  margin-top: 2px;
+  font-size: 11.5px;
+  font-weight: 400;
+  line-height: 1.4;
+}
+.admin2-family-products .admin2-family-product-list li > button {
+  align-self: center;
+  min-height: 32px;
+  padding: 4px 9px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.25;
+  border: 1px solid #d4dde6;
+  border-radius: 6px;
+  background: #fff;
+  color: #405267;
+}
+.admin2-family-products .admin2-family-product-list li > button:not(:disabled):hover {
+  background: #edf4fb;
+  border-color: #aabbd0;
+}
+.admin2-family-products .admin2-family-product-list li > button:focus-visible {
+  outline: 2px solid #2f6db5;
+  outline-offset: 2px;
+}
+@media (max-width: 600px) {
+  .admin2-family-products .admin2-family-product-list li > button { align-self: flex-start; }
 }

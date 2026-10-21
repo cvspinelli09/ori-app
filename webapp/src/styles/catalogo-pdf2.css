@@ -475,3 +475,17 @@
     transform: none !important;
   }
 }
+
+/* Páginas editoriais: uma imagem por A4, sem elementos sobrepostos. */
+.pdf-family-page { box-sizing: border-box; width: 210mm; height: 297mm; min-height: 297mm; padding: 4mm; display: flex; align-items: center; justify-content: center; break-inside: avoid; }
+.pdf-family-page > img { display: block; width: 100%; height: 100%; object-fit: contain; object-position: center; }
+.pdf-image-status, .pdf-load-error { margin: 12px 20px; padding: 12px; border-radius: 6px; background: #fff; color: #344054; font-size: 14px; }
+.pdf-image-status button, .pdf-load-error button { margin-left: 8px; padding: 7px 12px; cursor: pointer; }
+.pdf-toolbar button:disabled { cursor: default; opacity: .55; }
+@media print {
+  .pdf-image-status, .pdf-load-error { display: none; }
+  .pdf-page:last-child { page-break-after: auto; break-after: auto; }
+  .pdf-family-page { height: 297mm; min-height: 297mm; break-after: page; }
+  .pdfpage-root:not(.pdf-images-ready) #pdfPagesWrap { display: none !important; }
+  .pdfpage-root:not(.pdf-images-ready)::after { display: block; content: 'Impressão bloqueada: aguarde o carregamento de todas as imagens ou tente novamente na pré-visualização.'; padding: 20mm; font-size: 14pt; color: #111; }
+}

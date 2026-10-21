@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
 import { LeadsSection } from '../components/admin2/LeadsSection';
 import { OverviewSection } from '../components/admin2/OverviewSection';
+import { FamiliesSection } from '../components/admin2/FamiliesSection';
 import '../styles/admin2.css';
 
 const ADMIN2_MAX_HIGHLIGHT_CATEGORIES = 5;
@@ -79,6 +80,7 @@ const NAV_ITEMS = [
   { key: 'products', label: 'Produtos' },
   { key: 'categories', label: 'Categorias' },
   { key: 'lines', label: 'Linhas' },
+  { key: 'families', label: 'Famílias' },
 
   { section: 'CONTEÚDO' },
   { key: 'highlights', label: 'Destaques' },
@@ -107,6 +109,10 @@ const SECTION_META = {
   lines: {
     title: 'Linhas',
     subtitle: 'Gerencie as linhas de produtos utilizadas no catálogo.',
+  },
+  families: {
+    title: 'Famílias',
+    subtitle: 'Gerencie famílias, páginas e linhas de origem.',
   },
   highlights: {
     title: 'Destaques',
@@ -4313,6 +4319,8 @@ export function Admin2() {
 
           {activeSection === 'lines' && <LinesSection />}
 
+          {activeSection === 'families' && <FamiliesSection session={session} />}
+
           {activeSection === 'highlights' && <HighlightsSection />}
 
           {activeSection === 'banners' && <BannersSection />}
@@ -4329,6 +4337,7 @@ export function Admin2() {
             activeSection !== 'products' &&
             activeSection !== 'categories' &&
             activeSection !== 'lines' &&
+             activeSection !== 'families' &&
             activeSection !== 'highlights' &&
             activeSection !== 'banners' &&
             activeSection !== 'instagram' &&

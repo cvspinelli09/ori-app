@@ -1,5 +1,7 @@
-﻿import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { readPdfGeneration, loadPdfGeneration, waitForPdfImages, recordCatalogLead } from '../lib/catalogoGeneration';
+import { PdfFamilyPages } from '../components/PdfFamilyPages';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import '../styles/catalogo-pdf2.css';
@@ -354,8 +356,15 @@ function getMacroRegionFromState(state) {
 
 export function CatalogoPdf2() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const generationId = searchParams.get('generation');
   const { session, profile, loading: authLoading } = useAuth();
   const [pages, setPages] = useState(null);
+  const [loadError, setLoadError] = useState('');
+  const [loadAttempt, setLoadAttempt] = useState(0);
+  const [imageStatus, setImageStatus] = useState('loading');
+  const [imageError, setImageError] = useState('');
+  const [imageAttempt, setImageAttempt] = useState(0);
   const [regiao, setRegiao] = useState('');
   const regiaoTouched = useRef(false);
   const leadRegisteredRef = useRef(false);
@@ -390,49 +399,14 @@ export function CatalogoPdf2() {
     }
 
     let cancelled = false;
+    const controller = new AbortController();
 
     async function run() {
-      let ids = [];
-      let selectedBrands = [];
-
-      try {
-        ids = JSON.parse(
-          localStorage.getItem('ori_catalogo_ids') || '[]'
-        );
-      } catch {
-        /* ignore */
-      }
-
-      try {
-        selectedBrands = JSON.parse(
-          localStorage.getItem('ori_catalogo_marcas') || '[]'
-        );
-      } catch {
-        /* ignore */
-      }
-
-      // busca o catálogo inteiro e filtra no cliente -- evita mandar uma lista enorme
-      // de ids pro Supabase via query string (poderia passar do limite de URL).
-      const { data, error } = await supabase
-        .from('produtos')
-        .select('*')
-        .eq('ativo', true)
-        .limit(5000);
-
-      if (error) {
-        console.error(error);
-        return;
-      }
-
+      setImageStatus('loading'); setPages(null);
+      const contract = readPdfGeneration(localStorage, generationId);
+      const selectedBrands = contract.filtros.brands;
+      const { products: base, familyPages } = await loadPdfGeneration(supabase, contract, controller.signal);
       if (cancelled) return;
-
-      const idSet = new Set(ids);
-
-      const base =
-        ids.length > 0
-          ? (data ?? []).filter((p) => idSet.has(p.id))
-          : (data ?? []);
-
       const uniquePicks = base.slice();
 
       const picks = base
@@ -503,7 +477,8 @@ export function CatalogoPdf2() {
           picks: uniquePicks,
           builtPages,
           today: new Date().toLocaleDateString('pt-br'),
-          isFullCatalog: ids.length === 0,
+          isFullCatalog: contract.produtoMode === 'all',
+          familyPages,
         });
 
         if (!leadRegisteredRef.current) {
@@ -526,27 +501,9 @@ export function CatalogoPdf2() {
             }
           }
 
-          const { error: leadError } = await supabase
-            .from('leads')
-            .insert({
-              nome: profile?.nome || session.user.email,
-              email: session.user.email,
-
-              vendedor_id:
-                profile?.role === 'vendedor'
-                  ? session.user.id
-                  : null,
-
-              produtos_selecionados: uniquePicks.map((p) => ({
-                id: p.id,
-                codigo: p.codigo,
-                descricao: p.descricao,
-              })),
-
-              origem: 'catalogo_pdf',
-              regiao: detectedRegion || null,
-            });
-
+          const { error: leadError } = await recordCatalogLead(supabase, {
+            products: uniquePicks, session, profile, region: detectedRegion,
+          });
           if (leadError) {
             console.error(
               'Erro ao registrar geração de catálogo:',
@@ -556,10 +513,26 @@ export function CatalogoPdf2() {
         }
       }
     } 
-    run();
-    return () => { cancelled = true; };
-  }, [authLoading, session, navigate]);
+    run().catch((error) => {
+      if (!cancelled) { console.error(error); setLoadError(error.message || 'Não foi possível montar o catálogo.'); }
+    });
+    return () => { cancelled = true; controller.abort(); };
+  }, [authLoading, session, navigate, generationId, loadAttempt]);
 
+  useEffect(() => {
+    if (!pages) return;
+    const controller = new AbortController();
+    waitForPdfImages(pagesElRef.current, controller.signal).then(() => {
+      if (!controller.signal.aborted) { setImageStatus('ready'); setImageError(''); }
+    }).catch((error) => {
+      if (!controller.signal.aborted) { setImageStatus('error'); setImageError(error.message || 'Falha ao preparar imagens.'); }
+    });
+    return () => controller.abort();
+  }, [pages, imageAttempt]);
+
+  function retryImages() {
+    setImageStatus('loading'); setImageError(''); setImageAttempt((value) => value + 1);
+  }
   useEffect(() => {
     function fitPagesToScreen() {
       const wrap = pagesWrapRef.current;
@@ -593,12 +566,17 @@ export function CatalogoPdf2() {
     fitPagesToScreen();
     window.addEventListener('resize', fitPagesToScreen);
     return () => window.removeEventListener('resize', fitPagesToScreen);
-  }, [pages]);
+  }, [pages, imageAttempt]);
 
   function handlePrint() {
-    window.print();
+    if (imageStatus === 'ready') window.print();
   }
 
+  if (loadError) {
+    return <div className="pdfpage-root"><div className="pdf-load-error" role="alert"><p>{loadError}</p>
+      <button type="button" onClick={() => { setLoadError(''); setPages(null); setImageStatus('loading'); setLoadAttempt((value) => value + 1); }}>Tentar novamente</button>
+      <button type="button" onClick={() => navigate('/catalogo')}>Voltar ao catálogo</button></div></div>;
+  }
   if (!pages) {
     return <div className="pdfpage-root"><p style={{ padding: 24 }}>Montando catálogo...</p></div>;
   }
@@ -621,7 +599,7 @@ export function CatalogoPdf2() {
     '(11) 2542-5110';
 
   return (
-    <div className="pdfpage-root" ref={measureRef}>
+    <div className={`pdfpage-root${imageStatus === 'ready' ? ' pdf-images-ready' : ''}`} ref={measureRef}>
       <div className="pdf-toolbar">
         <span>Pré-visualização do catálogo — na janela de impressão, use margens "Nenhuma" e marque "Imprimir gráficos de segundo plano"</span>
         <input
@@ -632,11 +610,13 @@ export function CatalogoPdf2() {
           onChange={(e) => { regiaoTouched.current = true; setRegiao(e.target.value); }}
           title="Região estimada automaticamente. Edite se necessário."
         />
-        <button onClick={handlePrint}>Imprimir / Salvar PDF</button>
+        <button onClick={handlePrint} disabled={imageStatus !== 'ready'}>Imprimir / Salvar PDF</button>
       </div>
 
+      {imageStatus === 'loading' && <p className="pdf-image-status" role="status">Preparando e verificando imagens antes da impressão...</p>}
+      {imageStatus === 'error' && <div className="pdf-image-status" role="alert"><span>{imageError} A impressão está bloqueada.</span> <button type="button" onClick={retryImages}>Tentar novamente</button></div>}
       <div id="pdfPagesWrap" ref={pagesWrapRef}>
-        <div id="pdfPages" ref={pagesElRef}>
+        <div id="pdfPages" ref={pagesElRef} key={imageAttempt}>
           <div className="pdf-page pdf-cover">
             <img
               className="cover-art"
@@ -670,6 +650,8 @@ export function CatalogoPdf2() {
               </div>
             </div>
           ))}
+
+          <PdfFamilyPages pages={pages.familyPages} />
 
           <div className="pdf-page pdf-back-cover">
             <div className="pdf-back-white">

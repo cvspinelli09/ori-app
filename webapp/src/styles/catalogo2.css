@@ -1781,3 +1781,119 @@
 .catalogo2-user-menu .catalogo2-user-menu-logout {
   color: #b42318;
 }
+/* Conteúdo editorial independente dos cards e da paginação de produtos. */
+.catalogo2-related-families { margin-top: 28px; padding-top: 20px; border-top: 1px solid #dce4ee; }
+.catalogo2-related-families > h2 { margin: 0 0 16px; color: #182235; font-size: 19px; font-weight: 650; }
+.catalogo2-related-families > p { font-size: 13px; color: #526174; }
+.catalogo2-related-families button { padding: 7px 12px; margin-left: 6px; cursor: pointer; }
+.catalogo2-family-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(230px, 100%), 1fr)); gap: 16px; }
+.catalogo2-family-card { min-width: 0; overflow: hidden; border: 1px solid #dce4ee; border-radius: 8px; background: #fff; }
+.catalogo2-family-cover { height: 260px; display: flex; align-items: center; justify-content: center; padding: 12px; background: #f5f7fa; border-bottom: 1px solid #e5ebf2; }
+.catalogo2-family-cover img { width: 100%; height: 100%; object-fit: contain; }
+.catalogo2-family-cover img[hidden], .catalogo2-family-cover span[hidden] { display: none; }
+.catalogo2-family-cover > span { color: #66758a; font-size: 13px; }
+.catalogo2-family-body { padding: 14px; overflow-wrap: anywhere; }
+.catalogo2-family-label { display: inline-block; padding: 3px 7px; border-radius: 4px; background: #eaf1fa; color: #174f96; font-size: 10px; text-transform: uppercase; letter-spacing: .04em; }
+.catalogo2-family-brand { margin: 10px 0 4px; color: #174f96; font-size: 12px; font-weight: 700; }
+.catalogo2-family-body h3 { margin: 6px 0; color: #182235; font-size: 15px; line-height: 1.4; }
+.catalogo2-family-application { margin: 0; color: #66758a; font-size: 12px; line-height: 1.5; }
+@media (max-width: 600px) {
+  .catalogo2-related-families { margin-top: 20px; padding-top: 16px; }
+  .catalogo2-family-cover { height: 230px; }
+}
+/* Leitor editorial em camada modal nativa, separado dos detalhes de produtos. */
+.catalogo2-family-card { position: relative; }
+.catalogo2-related-families .catalogo2-family-open {
+  position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%;
+  margin: 0; padding: 0; border: 0; border-radius: inherit; background: transparent; cursor: pointer;
+}
+.catalogo2-family-card:focus-within { outline: 2px solid #1767b4; outline-offset: 3px; }
+.catalogo2-family-open:hover { box-shadow: inset 0 0 0 2px #b9cde6; }
+.catalogo2-family-viewer {
+  width: min(1100px, calc(100vw - 40px)); max-width: none; max-height: calc(100dvh - 40px);
+  margin: auto; padding: 0; border: 1px solid #dce4ee; border-radius: 12px;
+  background: #fff; color: #182235; box-shadow: 0 20px 70px #0005; overflow: hidden;
+}
+.catalogo2-family-viewer[open] { display: flex; flex-direction: column; }
+.catalogo2-family-viewer::backdrop { background: #101b2bb8; }
+.catalogo2-family-viewer-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 14px 20px; border-bottom: 1px solid #e5ebf2; flex-shrink: 0; }
+.catalogo2-family-viewer-header > div { min-width: 0; overflow-wrap: anywhere; }
+.catalogo2-family-viewer-header h2 { margin: 3px 0; font-size: 19px; line-height: 1.35; }
+.catalogo2-family-viewer-header p { margin: 2px 0; font-size: 12px; color: #526174; }
+.catalogo2-family-viewer-header p:first-child { color: #174f96; font-weight: 600; }
+.catalogo2-related-families .catalogo2-family-viewer button { min-height: 40px; margin: 0; padding: 8px 12px; border: 1px solid #d3dfed; border-radius: 6px; background: #fff; color: #174f96; cursor: pointer; }
+.catalogo2-family-viewer button:focus-visible { outline: 2px solid #1767b4; outline-offset: 2px; }
+.catalogo2-related-families .catalogo2-family-viewer-header > button { min-width: 40px; font-size: 24px; line-height: 1; flex-shrink: 0; }
+.catalogo2-family-viewer-content { min-height: 0; overflow: auto; overscroll-behavior: contain; padding: 12px; background: #f3f5f8; }
+.catalogo2-family-viewer-figure { margin: 0; }
+.catalogo2-family-viewer-image { position: relative; display: flex; align-items: center; justify-content: center; height: min(68dvh, 1000px); min-height: 180px; }
+.catalogo2-family-viewer-image > img { display: block; width: 100%; height: 100%; object-fit: contain; }
+.catalogo2-family-viewer-image > img[hidden] { display: none; }
+.catalogo2-family-viewer-image > p, .catalogo2-family-viewer-image > div { position: absolute; z-index: 1; max-width: calc(100% - 24px); padding: 12px; background: #fffffff2; border-radius: 6px; text-align: center; font-size: 14px; }
+.catalogo2-family-viewer-figure figcaption { padding: 8px 4px 0; text-align: center; color: #526174; font-size: 12px; }
+.catalogo2-family-viewer-navigation { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 16px; border-top: 1px solid #e5ebf2; flex-shrink: 0; font-size: 13px; }
+.catalogo2-family-viewer-navigation button:disabled { opacity: .45; cursor: default; }
+@media (max-width: 600px) {
+  .catalogo2-family-viewer { width: calc(100vw - 16px); max-height: calc(100dvh - 16px); border-radius: 8px; }
+  .catalogo2-family-viewer-header { padding: 12px; gap: 8px; }
+  .catalogo2-family-viewer-header h2 { font-size: 16px; }
+  .catalogo2-family-viewer-content { padding: 6px; }
+  .catalogo2-family-viewer-image { height: 65dvh; }
+  .catalogo2-family-viewer-navigation { gap: 6px; padding: 8px; font-size: 12px; }
+  .catalogo2-related-families .catalogo2-family-viewer-navigation button { padding: 8px; }
+}
+/* Leitor A4: largura derivada da altura útil, sem moldura horizontal excessiva. */
+.catalogo2-family-viewer {
+  --family-navigation-size: 0px;
+  box-sizing: border-box;
+  width: min(calc((100dvh - 74px - var(--family-navigation-size)) * .707071 + 12px), calc(100vw - 20px));
+  height: calc(100dvh - 20px);
+  max-height: calc(100dvh - 20px);
+  border-radius: 8px;
+}
+.catalogo2-family-viewer[data-multiple-pages='true'] { --family-navigation-size: 50px; }
+.catalogo2-family-viewer[open] { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; }
+.catalogo2-family-viewer-header { align-items: center; gap: 8px; padding: 5px 8px; }
+.catalogo2-family-viewer-header > div { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; }
+.catalogo2-family-viewer-header h2 { flex: 1; min-width: 0; margin: 0; font-size: 15px; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.catalogo2-family-viewer-header p { margin: 0; font-size: 11px; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.catalogo2-family-viewer-header .catalogo2-family-viewer-brand { flex-shrink: 0; max-width: 22%; color: #174f96; font-weight: 600; }
+.catalogo2-family-viewer-header .catalogo2-family-viewer-application { flex: 0 1 auto; max-width: 40%; color: #526174; font-weight: 400; }
+.catalogo2-related-families .catalogo2-family-viewer-header > button { min-width: 36px; min-height: 36px; padding: 4px; font-size: 22px; }
+.catalogo2-family-viewer-content { min-height: 0; padding: 4px; overflow: auto; }
+.catalogo2-family-viewer-figure { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+.catalogo2-family-viewer-image { flex: 1; min-height: 0; height: auto; width: 100%; }
+.catalogo2-family-viewer-image > img { min-height: 0; object-fit: contain; object-position: center; }
+.catalogo2-family-viewer-figure figcaption { flex-shrink: 0; max-height: 36px; overflow: auto; padding: 3px 2px 0; font-size: 11px; }
+.catalogo2-family-viewer-navigation { gap: 8px; padding: 5px 8px; font-size: 12px; }
+.catalogo2-related-families .catalogo2-family-viewer-navigation button { min-height: 36px; padding: 6px 9px; }
+@media (max-width: 600px) {
+  .catalogo2-family-viewer {
+    width: min(calc((100dvh - 96px - var(--family-navigation-size)) * .707071 + 10px), calc(100vw - 12px));
+    height: min(calc(100dvh - 12px), calc((100vw - 20px) * 1.414286 + 58px + var(--family-navigation-size))); max-height: calc(100dvh - 12px);
+  }
+  .catalogo2-family-viewer-header { padding: 5px 7px; }
+  .catalogo2-family-viewer-header > div { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 3px 7px; }
+  .catalogo2-family-viewer-header h2 { font-size: 14px; }
+  .catalogo2-family-viewer-header .catalogo2-family-viewer-brand { max-width: none; }
+  .catalogo2-family-viewer-header .catalogo2-family-viewer-application { grid-column: 1 / -1; max-width: none; font-size: 11px; }
+  .catalogo2-family-viewer-content { padding: 3px; }
+}
+/* Geração compartilhada: opção independente de filtros e seleções salvas. */
+.catalogo2-generation { display: flex; align-items: center; position: relative; flex-shrink: 0; }
+.catalogo2-generation > .catalogo2-export-btn { border-radius: 5px 0 0 5px; }
+.catalogo2-generation-toggle { height: 36px; width: 25px; border: 1px solid #dce3ec; border-left: 0; border-radius: 0 5px 5px 0; background: #fff; color: #344054; cursor: pointer; }
+.catalogo2-generation-options { position: absolute; z-index: 45; right: 0; top: calc(100% + 7px); width: 260px; max-width: calc(100vw - 24px); padding: 12px; border: 1px solid #dce3ec; border-radius: 7px; background: #fff; box-shadow: 0 8px 24px #18223526; }
+.catalogo2-include-families { display: flex; align-items: flex-start; gap: 7px; margin: 3px 0 8px; font-size: 11px; line-height: 1.35; color: #344054; cursor: pointer; }
+.catalogo2-include-families input { flex: 0 0 auto; width: 14px; height: 14px; margin: 1px 0 0; accent-color: #1767b4; }
+.catalogo2-generation-options > button { width: 100%; min-height: 34px; border: 0; border-radius: 5px; background: #1767b4; color: white; cursor: pointer; }
+.catalogo2-generation button:focus-visible { outline: 2px solid #1767b4; outline-offset: 2px; }
+.catalogo2-export-icon { display: none; }
+@media (max-width: 850px) {
+  .catalogo2-header { grid-template-columns: auto minmax(0, 1fr) auto; }
+  .catalogo2-header-actions { display: flex; gap: 0; }
+  .catalogo2-header-actions > :not(.catalogo2-generation) { display: none; }
+  .catalogo2-generation > .catalogo2-export-btn { width: 32px; padding: 0; }
+  .catalogo2-export-text { display: none; }
+  .catalogo2-export-icon { display: inline; font-size: 19px; }
+}

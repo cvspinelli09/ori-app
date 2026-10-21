@@ -1,11 +1,130 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import '../styles/catalogo2.css';
+import { isFamiliesOption, productLineFilters, requireTextProductId, readCatalogPages,
+  relatedFamiliesForFilters, normalize, normalizeCode, matchesSearch, familyViewerPages, loadCatalogFamilies } from '../lib/catalogoFamilias';
+import { createCatalogGeneration, saveCatalogGeneration, readCatalogGeneration, generationUrl,
+  PENDING_GENERATION_KEY } from '../lib/catalogoGeneration';
 
 const PENDING_SELECTION_KEY = 'catalogo2_pending_selection';
 
+function FamilyPageImage({ page, familyName }) {
+  const [status, setStatus] = useState('loading');
+  const [attempt, setAttempt] = useState(0);
+  return <figure className="catalogo2-family-viewer-figure" aria-busy={status === 'loading'}>
+    <div className="catalogo2-family-viewer-image">
+      {status === 'loading' && <p role="status">Carregando imagem...</p>}
+      {status === 'error' && <div role="alert"><p>Não foi possível carregar esta página.</p>
+        <button type="button" onClick={() => { setStatus('loading'); setAttempt((value) => value + 1); }}>Tentar novamente</button></div>}
+      <img key={attempt} src={page.imagem_url} alt={page.titulo || `Página editorial de ${familyName}`}
+        hidden={status === 'error'} onLoad={() => setStatus('ready')} onError={() => setStatus('error')} />
+    </div>
+    {page.titulo && <figcaption>{page.titulo}</figcaption>}
+  </figure>;
+}
+
+function FamilyViewer({ family, pages, onClose }) {
+  const dialogRef = useRef(null);
+  const closeRef = useRef(null);
+  const titleId = useId();
+  const [index, setIndex] = useState(0);
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    const opener = document.activeElement;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    dialog.showModal();
+    closeRef.current?.focus({ preventScroll: true });
+    return () => {
+      dialog.close();
+      document.body.style.overflow = previousOverflow;
+      if (opener instanceof HTMLElement && opener.isConnected) opener.focus({ preventScroll: true });
+    };
+  }, []);
+
+  const move = (direction) => setIndex((current) => Math.max(0, Math.min(pages.length - 1, current + direction)));
+  return <dialog ref={dialogRef} className="catalogo2-family-viewer" data-multiple-pages={pages.length > 1} aria-modal="true" aria-labelledby={titleId}
+    onCancel={(event) => { event.preventDefault(); onClose(); }}
+    onClick={(event) => {
+      if (event.target !== event.currentTarget) return;
+      const rect = event.currentTarget.getBoundingClientRect();
+      if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) onClose();
+    }}
+    onKeyDown={(event) => {
+      if (event.key === 'Tab') {
+        const controls = [...event.currentTarget.querySelectorAll('button:not(:disabled), [href], input:not(:disabled), [tabindex="0"]')]
+          .filter((element) => element.getClientRects().length > 0);
+        const first = controls[0];
+        const last = controls[controls.length - 1];
+        if (event.shiftKey && (document.activeElement === first || !event.currentTarget.contains(document.activeElement))) {
+          event.preventDefault(); last?.focus({ preventScroll: true });
+        } else if (!event.shiftKey && (document.activeElement === last || !event.currentTarget.contains(document.activeElement))) {
+          event.preventDefault(); first?.focus({ preventScroll: true });
+        }
+      }
+      if (event.key === 'ArrowLeft' && pages.length > 1) { event.preventDefault(); move(-1); }
+      if (event.key === 'ArrowRight' && pages.length > 1) { event.preventDefault(); move(1); }
+    }}>
+    <header className="catalogo2-family-viewer-header"><div>
+      {family.marca && <p className="catalogo2-family-viewer-brand" title={family.marca}>{family.marca}</p>}<h2 id={titleId} title={family.nome}>{family.nome}</h2>
+      {(family.veiculo || family.anos) && <p className="catalogo2-family-viewer-application" title={[family.veiculo, family.anos].filter(Boolean).join(' · ')}>{[family.veiculo, family.anos].filter(Boolean).join(' · ')}</p>}
+    </div><button ref={closeRef} type="button" aria-label="Fechar visualização da Família" onClick={onClose}>×</button></header>
+    <div className="catalogo2-family-viewer-content">
+      {pages[index] ? <FamilyPageImage key={pages[index].id} page={pages[index]} familyName={family.nome} /> : <p role="status">Nenhuma página ativa disponível.</p>}
+    </div>
+    {pages.length > 1 && <nav className="catalogo2-family-viewer-navigation" aria-label="Páginas da Família">
+      <button type="button" aria-label="Página anterior" disabled={index === 0} onClick={() => move(-1)}>← Anterior</button>
+      <span role="status" aria-live="polite">Página {index + 1} de {pages.length}</span>
+      <button type="button" aria-label="Próxima página" disabled={index === pages.length - 1} onClick={() => move(1)}>Próxima →</button>
+    </nav>}
+  </dialog>;
+}
+function useEditorialFamilies() {
+  const [data, setData] = useState({ status: 'loading', families: [], links: [], pages: [], familyLines: [], lines: [] });
+  const [attempt, setAttempt] = useState(0);
+  useEffect(() => {
+    const controller = new AbortController();
+    loadCatalogFamilies(supabase, controller.signal).then((result) => {
+      if (!controller.signal.aborted) setData({ status: 'ready', ...result });
+    }).catch((error) => {
+      if (!controller.signal.aborted) {
+        console.error('Erro ao carregar famílias relacionadas:', error);
+        setData({ status: 'error', families: [], links: [], pages: [], familyLines: [], lines: [] });
+      }
+    });
+    return () => controller.abort();
+  }, [attempt]);
+  const retry = () => { setData({ status: 'loading', families: [], links: [], pages: [], familyLines: [], lines: [] }); setAttempt((value) => value + 1); };
+  return { data, retry };
+}
+
+function RelatedFamilies({ related, data, retry, productsLoading, productsComplete }) {
+  const [viewer, setViewer] = useState(null);
+  const closeViewer = useCallback(() => setViewer(null), []);  // A elegibilidade editorial avalia cada grupo independentemente. A apresentação espera apenas
+  // a rolagem terminar, para nunca intercalar Famílias entre cards de produtos.
+  if (productsLoading || !productsComplete) return null;
+  if (data.status === 'ready' && !related.length) return null;
+  return <section className="catalogo2-related-families" aria-labelledby="catalogo2-related-families-title">
+    <h2 id="catalogo2-related-families-title">Famílias relacionadas</h2>
+    {data.status === 'loading' && <p role="status">Carregando famílias relacionadas...</p>}
+    {data.status === 'error' && <p role="alert">Não foi possível carregar as Famílias. Os produtos continuam disponíveis. <button type="button"
+      onClick={retry}>Tentar novamente</button></p>}
+    {data.status === 'ready' && <div className="catalogo2-family-grid">{related.map((family) => <article className="catalogo2-family-card" key={family.id}>
+      <button type="button" className="catalogo2-family-open" aria-label={'Abrir páginas da Família ' + family.nome} onClick={() => setViewer({ family, pages: familyViewerPages(family.id, data.pages) })} />
+      <div className="catalogo2-family-cover"><img src={family.cover.imagem_url} loading="lazy" alt={family.cover.titulo || family.nome}
+        onError={(event) => { event.currentTarget.hidden = true; event.currentTarget.nextElementSibling.hidden = false; }} />
+        <span hidden>Imagem indisponível</span></div>
+      <div className="catalogo2-family-body"><span className="catalogo2-family-label">Família</span>
+        {family.marca && <p className="catalogo2-family-brand">{family.marca}</p>}
+        <h3>{family.nome}</h3>
+        {(family.veiculo || family.anos) && <p className="catalogo2-family-application">{[family.veiculo, family.anos].filter(Boolean).join(' · ')}</p>}
+      </div>
+    </article>)}</div>}
+    {viewer && <FamilyViewer key={viewer.family.id} family={viewer.family} pages={viewer.pages} onClose={closeViewer} />}
+  </section>;
+}
 function buildFiltrosSnapshot({
   selectedCategories,
   selectedLines,
@@ -47,10 +166,11 @@ function countMatchingProducts(produtos, filtros) {
   if (filtros.brands?.length) {
     list = list.filter((p) => filtros.brands.includes(p.marca));
   }
-  if (filtros.lines?.length) {
+  const productLines = productLineFilters(filtros.lines);
+  if (productLines.length) {
     list = list.filter((p) => {
       const linhasProduto = (p.linha || '').split(',').map((l) => l.trim()).filter(Boolean);
-      return linhasProduto.some((linha) => filtros.lines.includes(linha));
+      return linhasProduto.some((linha) => productLines.includes(linha));
     });
   }
   if (filtros.application?.trim()) {
@@ -90,20 +210,6 @@ function countMatchingProducts(produtos, filtros) {
 function formatDatePtBr(iso) {
   if (!iso) return '';
   return new Date(iso).toLocaleDateString('pt-br');
-}
-
-function normalize(s) {
-  return (s || '')
-    .toString()
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '');
-}
-
-function normalizeCode(value) {
-  return String(value ?? '')
-    .toUpperCase()
-    .replace(/[^A-Z0-9]/g, '');
 }
 
 function formatMultiSelectLabel(selected, allLabel) {
@@ -204,20 +310,6 @@ function MultiSelectFilter({
   );
 }
 
-function matchesSearch(p, query) {
-  if (!query) return true;
-
-  const q = normalize(query);
-
-  return (
-    normalize(p.descricao).includes(q) ||
-    normalize(p.codigo).includes(q) ||
-    normalize(p.original).includes(q) ||
-    normalize(p.veiculos).includes(q) ||
-    normalize(p.marca).includes(q)
-  );
-}
-
 export function Catalogo2() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -229,6 +321,10 @@ export function Catalogo2() {
   const [produtos, setProdutos] = useState([]);
   const [catalogCategories, setCatalogCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [incluirFamilias, setIncluirFamilias] = useState(false);
+  const [generationMenuOpen, setGenerationMenuOpen] = useState(false);
+  const generationMenuRef = useRef(null);
+  const editorial = useEditorialFamilies();
   const [search, setSearch] = useState('');
   const [sortBy, setSortBy] = useState('marca');
   const [selectedCategories, setSelectedCategories] = useState([]);
@@ -318,7 +414,7 @@ export function Catalogo2() {
     if (pending.intent === 'save') setShowSaveModal(true);
     if (pending.intent === 'mySelections') setShowMySelections(true);
     if (pending.intent === 'generateCatalog') {
-      window.open('/catalogo/pdf', '_blank', 'noopener,noreferrer');
+      showToast('Esta geração antiga precisa ser iniciada novamente.');
     }
   }, [session]);
 
@@ -338,27 +434,55 @@ export function Catalogo2() {
     setShowMySelections(true);
   }
 
+  useEffect(() => {
+    if (!session) return;
+    const generationId = sessionStorage.getItem(PENDING_GENERATION_KEY);
+    if (!generationId) return;
+    let cancelled = false;
+    Promise.resolve().then(() => {
+      if (cancelled) return;
+      const contract = readCatalogGeneration(localStorage, generationId);
+      sessionStorage.removeItem(PENDING_GENERATION_KEY);
+      applyFiltros(contract.filtros);
+      setSearch(contract.filtros.search);
+      window.open(generationUrl(contract.id), '_blank', 'noopener,noreferrer');
+    }).catch((error) => {
+      if (!cancelled) { sessionStorage.removeItem(PENDING_GENERATION_KEY); showToast(error.message); }
+    });
+    return () => { cancelled = true; };
+  }, [session]);
+  useEffect(() => {
+    if (!generationMenuOpen) return;
+    function close(event) { if (!generationMenuRef.current?.contains(event.target)) setGenerationMenuOpen(false); }
+    function key(event) { if (event.key === 'Escape') { setGenerationMenuOpen(false); generationMenuRef.current?.querySelector('[aria-controls]')?.focus(); } }
+    document.addEventListener('pointerdown', close); document.addEventListener('keydown', key);
+    return () => { document.removeEventListener('pointerdown', close); document.removeEventListener('keydown', key); };
+  }, [generationMenuOpen]);
+
   function handleGenerateCatalog() {
-  const catalogIds = filteredList.map((produto) => produto.id);
-
-  localStorage.setItem(
-    'ori_catalogo_ids',
-    JSON.stringify(catalogIds)
-  );
-
-  localStorage.setItem(
-    'ori_catalogo_marcas',
-    JSON.stringify(selectedBrands)
-  );
-
-  if (!session) {
-    requireLoginThen('generateCatalog');
-    return;
+    if (loading) { showToast('Aguarde o carregamento dos produtos.'); return; }
+    if (incluirFamilias && editorial.data.status !== 'ready') {
+      showToast('Aguarde ou tente novamente o carregamento das Famílias.'); return;
+    }
+    try {
+      const contract = createCatalogGeneration({
+        produtoIds: filteredList.map((produto) => produto.id), incluirFamilias,
+        familiaIds: incluirFamilias ? eligibleFamilies.map((family) => family.id) : [],
+        filtros: generationFilters,
+      });
+      if (!contract.produtoIds.length && !contract.familiaIds.length) {
+        showToast('Nenhum produto ou Família corresponde a esta geração.'); return;
+      }
+      saveCatalogGeneration(localStorage, contract);
+      setGenerationMenuOpen(false); setIncluirFamilias(false);
+      if (!session) {
+        sessionStorage.setItem(PENDING_GENERATION_KEY, contract.id);
+        navigate('/login', { state: { from: '/catalogo' } });
+        return;
+      }
+      window.open(generationUrl(contract.id), '_blank', 'noopener,noreferrer');
+    } catch (error) { showToast(error.message); }
   }
-
-  window.open('/catalogo/pdf', '_blank', 'noopener,noreferrer');
-}
-
   async function handleLogout() {
     setUserMenuOpen(false);
     await signOut();
@@ -449,26 +573,23 @@ export function Catalogo2() {
 
   useEffect(() => {
     let cancelled = false;
+    const productsController = new AbortController();
 
     async function loadProducts() {
-      const { data, error } = await supabase
-        .from('produtos')
-        .select('*')
-        .eq('ativo', true)
-        .limit(4000);
-
-      if (cancelled) return;
-
-      if (error) {
-        console.error('Erro ao carregar produtos:', error);
-        setProdutos([]);
-      } else {
-        setProdutos(data ?? []);
+      try {
+        const rows = await readCatalogPages(() => supabase.from('produtos')
+          .select('*,id::text').eq('ativo', true).order('id'), productsController.signal);
+        rows.forEach((product) => requireTextProductId(product.id));
+        if (!cancelled) setProdutos(rows);
+      } catch (error) {
+        if (!cancelled) {
+          console.error('Erro ao carregar produtos:', error);
+          setProdutos([]);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
       }
-
-      setLoading(false);
     }
-
     async function loadCategories() {
       const { data, error } = await supabase
         .from('catalogo_categorias')
@@ -523,6 +644,7 @@ export function Catalogo2() {
 
     return () => {
       cancelled = true;
+      productsController.abort();
 
       window.removeEventListener('focus', refreshCategories);
       document.removeEventListener(
@@ -712,14 +834,15 @@ export function Catalogo2() {
       });
     }
 
-    if (selectedLines.length) {
+    const productLines = productLineFilters(selectedLines);
+    if (productLines.length) {
         list = list.filter((p) => {
         const linhasProduto = (p.linha || '')
             .split(',')
             .map((linha) => linha.trim())
             .filter(Boolean);
 
-        return linhasProduto.some((linha) => selectedLines.includes(linha));
+        return linhasProduto.some((linha) => productLines.includes(linha));
         });
     }
 
@@ -859,6 +982,9 @@ export function Catalogo2() {
       barcodeSearch,
     ]);
 
+  const generationFilters = { ...currentFiltros, search, categories: selectedCategoryNames ? [...selectedCategoryNames] : [] };
+  const eligibleFamilies = relatedFamiliesForFilters(produtos, editorial.data.families, editorial.data.links,
+    editorial.data.pages, editorial.data.familyLines, editorial.data.lines, generationFilters);
     const displayProducts = useMemo(() => {
       const expanded = filteredList.flatMap((produto) => {
         const rawBrands =
@@ -936,7 +1062,7 @@ export function Catalogo2() {
     const filterOptions = useMemo(() => {
       const categories = new Set();
       const brands = new Set();
-      const lines = new Set();
+      const lines = new Set(['FAMÍLIAS']);
 
       produtos.forEach((p) => {
         if (p.categoria) {
@@ -952,7 +1078,7 @@ export function Catalogo2() {
         .split(',')
         .map((linha) => linha.trim())
         .filter(Boolean)
-        .forEach((linha) => lines.add(linha));
+        .forEach((linha) => { if (!isFamiliesOption(linha)) lines.add(linha); });
     }
   });
 
@@ -1009,14 +1135,18 @@ export function Catalogo2() {
             Catálogo atualizado
           </span>
 
-          <button
-            type="button"
-            className="catalogo2-export-btn"
-            onClick={handleGenerateCatalog}
-          >
-            Gerar catálogo
-          </button>
-
+          <div className="catalogo2-generation" ref={generationMenuRef}>
+            <button type="button" className="catalogo2-export-btn" onClick={handleGenerateCatalog} aria-label="Gerar catálogo">
+              <span className="catalogo2-export-text">Gerar catálogo</span><span className="catalogo2-export-icon" aria-hidden="true">⇩</span>
+            </button>
+            <button type="button" className="catalogo2-generation-toggle" aria-label="Opções de geração do catálogo"
+              aria-expanded={generationMenuOpen} aria-controls="catalogo2-generation-options" onClick={() => setGenerationMenuOpen((value) => !value)}>⌄</button>
+            {generationMenuOpen && <div id="catalogo2-generation-options" className="catalogo2-generation-options" role="group" aria-label="Opções do PDF">
+              <label className="catalogo2-include-families"><input type="checkbox" checked={incluirFamilias}
+                onChange={(event) => setIncluirFamilias(event.target.checked)} />Incluir Famílias relacionadas no PDF</label>
+              <button type="button" onClick={handleGenerateCatalog}>Gerar catálogo</button>
+            </div>}
+          </div>
           {!session ? (
             <button
               type="button"
@@ -1162,7 +1292,7 @@ export function Catalogo2() {
                 />
             </div>
 
-            <div className="catalogo2-filter-divider" />
+
 
             <div className="catalogo2-filter-section">
               <MultiSelectFilter
@@ -1184,7 +1314,7 @@ export function Catalogo2() {
               />
             </div>
 
-            <div className="catalogo2-filter-divider" />
+
 
             <div className="catalogo2-filter-section">
               <label className="catalogo2-filter-label">Aplicação</label>
@@ -1198,7 +1328,7 @@ export function Catalogo2() {
               />
             </div>
 
-            <div className="catalogo2-filter-divider" />
+
 
             <div className="catalogo2-filter-section">
               <label className="catalogo2-filter-label">Códigos</label>
@@ -1236,8 +1366,9 @@ export function Catalogo2() {
               />
             </div>
 
-            <div className="catalogo2-filter-divider" />
 
+
+            <div className="catalogo2-filter-divider" />
             <div className="catalogo2-filter-section catalogo2-selecao-section">
               {openSelectionId && (
                 <div className="catalogo2-selecao-aberta">
@@ -1259,6 +1390,8 @@ export function Catalogo2() {
                 Minhas seleções
               </button>
 
+              <label className="catalogo2-include-families"><input type="checkbox" checked={incluirFamilias}
+                onChange={(event) => setIncluirFamilias(event.target.checked)} />Incluir Famílias relacionadas no PDF</label>
               <button
                 type="button"
                 className="catalogo2-btn-secondary"
@@ -1353,6 +1486,7 @@ export function Catalogo2() {
               ))}
           </div>
           <div ref={loadMoreRef} className="catalogo2-load-more-sentinel" />
+          <RelatedFamilies related={eligibleFamilies} data={editorial.data} retry={editorial.retry} productsLoading={loading} productsComplete={visibleCount >= displayProducts.length} />
         </section>
       </main>
       {detailProduct && (
