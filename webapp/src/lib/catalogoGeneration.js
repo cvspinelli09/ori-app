@@ -112,23 +112,138 @@ export async function loadPdfGeneration(client, contract, signal) {
 
 export async function waitForPdfImages(root, signal, timeoutMs = 30000) {
   if (!root) throw new Error('Pré-visualização indisponível.');
-  await Promise.all([...root.querySelectorAll('img')].map(async (img) => {
-    await new Promise((resolve, reject) => {
-      const finish = (error) => { clearTimeout(timer); img.removeEventListener('load', loaded); img.removeEventListener('error', failed); signal.removeEventListener('abort', aborted); if (error) reject(error); else resolve(); };
-      const loaded = () => finish(img.naturalWidth ? null : new Error('Imagem indisponível.'));
-      const failed = () => finish(new Error('Uma imagem do catálogo não carregou. Tente novamente.'));
-      const aborted = () => finish(new Error('Verificação de imagens cancelada.'));
-      const timer = setTimeout(() => finish(new Error('Tempo de carregamento das imagens excedido. Tente novamente.')), timeoutMs);
-      img.addEventListener('load', loaded); img.addEventListener('error', failed); signal.addEventListener('abort', aborted, { once: true });
-      if (signal.aborted) aborted(); else if (img.complete) loaded();
-    });
-    if (typeof img.decode === 'function') {
-      await img.decode();
-      if (signal.aborted) throw new Error('Verificação cancelada.');
-    }
-  }));
-}
 
+  const images = [...root.querySelectorAll('img')];
+
+  async function verifyImage(img, index) {
+    const source = img.currentSrc || img.src || '(sem endereço)';
+    const label = `Imagem ${index + 1}/${images.length}`;
+
+    const checkAbort = () => {
+      if (signal.aborted) throw new Error('Verificação de imagens cancelada.');
+    };
+
+    async function waitForLoad() {
+      checkAbort();
+
+      if (img.complete) {
+        if (!img.naturalWidth) throw new Error('Imagem indisponível.');
+        return;
+      }
+
+      await new Promise((resolve, reject) => {
+        let finished = false;
+        let timer;
+
+        const cleanup = () => {
+          clearTimeout(timer);
+          img.removeEventListener('load', loaded);
+          img.removeEventListener('error', failed);
+          signal.removeEventListener('abort', aborted);
+        };
+
+        const finish = (error) => {
+          if (finished) return;
+          finished = true;
+          cleanup();
+          if (error) reject(error);
+          else resolve();
+        };
+
+        const loaded = () => finish(img.naturalWidth ? null : new Error('Imagem indisponível.'));
+        const failed = () => finish(new Error('Falha no carregamento.'));
+        const aborted = () => finish(new Error('Verificação cancelada.'));
+
+        timer = setTimeout(
+          () => finish(new Error('Tempo de carregamento excedido.')),
+          timeoutMs
+        );
+
+        img.addEventListener('load', loaded);
+        img.addEventListener('error', failed);
+        signal.addEventListener('abort', aborted, { once: true });
+
+        if (signal.aborted) aborted();
+        else if (img.complete) loaded();
+      });
+    }
+
+    async function waitForDecode() {
+      if (typeof img.decode !== 'function') return;
+      checkAbort();
+
+      await new Promise((resolve, reject) => {
+        let finished = false;
+        let timer;
+
+        const cleanup = () => {
+          clearTimeout(timer);
+          signal.removeEventListener('abort', aborted);
+        };
+
+        const finish = (error) => {
+          if (finished) return;
+          finished = true;
+          cleanup();
+          if (error) reject(error);
+          else resolve();
+        };
+
+        const aborted = () => finish(new Error('Verificação cancelada.'));
+
+        timer = setTimeout(
+          () => finish(new Error('Tempo de decodificação excedido.')),
+          timeoutMs
+        );
+
+        signal.addEventListener('abort', aborted, { once: true });
+
+        if (signal.aborted) {
+          aborted();
+          return;
+        }
+
+        Promise.resolve()
+          .then(() => img.decode())
+          .then(() => finish(), (error) => finish(error));
+      });
+    }
+
+    try {
+      await waitForLoad();
+      await waitForDecode();
+      checkAbort();
+    } catch (error) {
+      if (signal.aborted) throw error;
+      console.warn('ORI PDF: falha ao verificar imagem', {
+        index: index + 1,
+        source,
+        message: error.message,
+      });
+      throw new Error(`${label}: ${error.message}. Verifique a imagem e tente novamente.`);
+    }
+  }
+
+  const concurrency = Math.min(8, images.length);
+  let nextIndex = 0;
+  let firstError = null;
+
+  async function worker() {
+    while (nextIndex < images.length && !firstError && !signal.aborted) {
+      const index = nextIndex++;
+      try {
+        await verifyImage(images[index], index);
+      } catch (error) {
+        if (!firstError) firstError = error;
+      }
+    }
+  }
+
+  await Promise.all(Array.from({ length: concurrency }, () => worker()));
+
+  if (firstError) throw firstError;
+  if (signal.aborted) throw new Error('Verificação de imagens cancelada.');
+}
 export async function recordCatalogLead(client, { products, session, profile, region }) {
   return client.from('leads').insert({
     nome: profile?.nome || session.user.email, email: session.user.email,

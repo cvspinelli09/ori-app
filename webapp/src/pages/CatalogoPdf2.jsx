@@ -8,6 +8,7 @@ import '../styles/catalogo-pdf2.css';
 
 const LINHA_ORDER = ['Leve', 'Van', 'Pesada'];
 
+
 function getLinhasOf(p) {
   return (p.linha || '').split(',').map((s) => s.trim()).filter(Boolean);
 }
@@ -214,7 +215,7 @@ function ProductCard({ p }) {
   return (
     <div className="pdf-catalog-card">
       <div className="photo">
-        <img src={p.foto_local} alt="" />
+        {typeof p.foto_local === "string" && p.foto_local.trim() ? <img src={p.foto_local} alt="" /> : null}
       </div>
 
       <div className="text">
@@ -750,7 +751,7 @@ function createMeasurer() {
 
     return `
       <div class="pdf-catalog-card">
-        <div class="photo"><img src="${p.foto_local}" alt=""></div>
+        <div class="photo">${typeof p.foto_local === "string" && p.foto_local.trim() ? `<img src="${p.foto_local}" alt="">` : ""}</div>
         <div class="text">
           <div class="suitable">Suitable to</div>
           <div class="code">
